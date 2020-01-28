@@ -286,6 +286,7 @@ class Chisel(Widget):
                 scaled_y = y * self.height
                 self.pixels.append(Rectangle(pos=(scaled_x, scaled_y), size=size))
         self.background.texture.mag_filter = 'nearest'
+        self.resize()
 
     def export_png(self, path_to_file, transparent=False):
         colors = []  # We won't save pebbles on the floor.
