@@ -102,13 +102,12 @@ class Pebble:
 
     def step(self, dt):
         """Gravity Physics"""
+        x, y = self.x, self.y
         vx, vy = self.velocity
         vx *= FRICTION
         vy *= FRICTION
         vy -= GRAVITY
-
         # Bounce off walls
-        x, y = self.x, self.y
         if not 0 < x < 1:
             vx *= -1
 
@@ -195,7 +194,7 @@ class Chisel(Widget):
         self.fbo.size = self.size
         self.fbo_rect.pos = self.pos
         self.fbo_rect.size = self.size
-        self.fbo_rect.texture= self.fbo.texture
+        self.fbo_rect.texture = self.fbo.texture
 
     def poke_power(self, tx, ty, touch_velocity, pebble_x, pebble_y):
         """
