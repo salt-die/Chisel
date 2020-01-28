@@ -11,7 +11,6 @@ from kivy.app import App
 from kivy.clock import Clock
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Rectangle
-from kivy.graphics.fbo import Fbo
 
 GRAVITY = .02
 FRICTION = .9
@@ -155,11 +154,6 @@ class Chisel(Widget):
         self.pebble_size = size = self.get_pebble_size()
 
         with self.canvas:
-            self.fbo = Fbo()
-            Color(1, 1, 1, 1)
-            self.fbo_rect = Rectangle()
-
-        with self.fbo:
             self.background_color = Color(1, 1, 1, 1)
             self.background = Rectangle(source=BACKGROUND)
 
@@ -175,7 +169,6 @@ class Chisel(Widget):
                     self.pixels.append(Rectangle(pos=(scaled_x, scaled_y), size=size))
 
         self.background.texture.mag_filter = 'nearest'
-        self.texture = self.fbo.texture
 
     def _delayed_resize(self, *args):
         self.resize_event.cancel()
@@ -191,11 +184,6 @@ class Chisel(Widget):
             scaled_y = y * self.height
             pixel.pos = scaled_x, scaled_y
             pixel.size = size
-
-        self.fbo.size = self.size
-        self.fbo_rect.pos = self.pos
-        self.fbo_rect.size = self.size
-        self.fbo_rect.texture = self.fbo.texture
 
     def poke_power(self, tx, ty, touch_velocity, pebble_x, pebble_y):
         """
@@ -242,7 +230,6 @@ class Chisel(Widget):
         CURRENT_IMAGE[:] = list(choice(PEBBLE_IMAGES))
         self.canvas.clear()
         self.setup_canvas()
-        self.resize()
 
     def save(self, path_to_file):
         _, pebbles_per_row, pebbles_per_column = CURRENT_IMAGE
@@ -274,11 +261,6 @@ class Chisel(Widget):
 
         self.canvas.clear()
         with self.canvas:
-            self.fbo = Fbo()
-            Color(1, 1, 1, 1)
-            self.fbo_rect = Rectangle()
-
-        with self.fbo:
             self.background_color = Color(1, 1, 1, 1)
             self.background = Rectangle(pos=self.pos, size=self.size, source=BACKGROUND)
             for (x, y, _), color in zip(self.positions, self.rgba):
@@ -287,7 +269,7 @@ class Chisel(Widget):
                 scaled_y = y * self.height
                 self.pixels.append(Rectangle(pos=(scaled_x, scaled_y), size=size))
         self.background.texture.mag_filter = 'nearest'
-        self.resize()
+
 
     def export_png(self, path_to_file, transparent=False):
         colors = []  # We won't save pebbles on the floor.
