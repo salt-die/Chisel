@@ -93,6 +93,7 @@ class Pebble:
     This handles physics for dislodged pebbles. Deletes itself after pebbles reach the floor.
     """
     def __init__(self, index, stone, x, y, velocity):
+        self.index = index
         self.stone = stone
         self.pos = stone.positions[index]
         self.pixel = stone.pixels[index]
@@ -124,7 +125,7 @@ class Pebble:
 
         if not y:
             self.update.cancel()
-            stone.pebbles.remove(self) # Remove reference // kill this object
+            del stone.pebbles[self.index] # Remove reference // kill this object
 
 
 class Chisel(Widget):
@@ -146,7 +147,7 @@ class Chisel(Widget):
         return scaled_w / pebbles_per_row, scaled_h / pebbles_per_column
 
     def setup_canvas(self):
-        self.pebbles = []
+        self.pebbles = {}
         self.positions = []
         self.rgba = []
         self.colors = []
@@ -226,7 +227,7 @@ class Chisel(Widget):
                 dislodged[x, y] = (z, i, velocity)
 
         for (x, y), (z, i, velocity) in dislodged.items():
-            self.pebbles.append(Pebble(i, self, x, y, velocity))
+            self.pebbles[i] = Pebble(i, self, x, y, velocity)
 
     def on_touch_down(self, touch):
         self.poke(touch)
@@ -264,7 +265,7 @@ class Chisel(Widget):
 
         CURRENT_IMAGE[1:] = pebble_dict['aspect']
 
-        self.pebbles = []
+        self.pebbles = {}
         self.positions = pebble_dict['positions']
         self.rgba = pebble_dict['colors']
         self.colors = []
