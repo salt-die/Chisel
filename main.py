@@ -184,19 +184,21 @@ class SelectionPopup(Popup):
 class ImportPopup(Popup):
     def __init__(self, chisel):
         self.chisel = chisel
+
         layout = BoxLayout(orientation="vertical",
                            spacing=dp(34),
                            padding=(dp(20), dp(15)))
+
         self.file_chooser = FileChooserListView(path=get_saves_path(),
                                                 filters=[self._filter_file],
                                                 size_hint=(1, 0.85))
+
         self.btn = Button(_("Please select a file."),
                           disabled=True,
                           font_size=sp(16),
                           size_hint=(1, 0.15))
 
-        self.file_chooser.bind(path=self._change_title,
-                               selection=self._change_btn_name)
+        self.file_chooser.bind(path=self._change_title, selection=self._change_btn_name)
         self.btn.bind(on_release=self._select_file)
 
         layout.add_widget(self.file_chooser)
@@ -244,20 +246,18 @@ class ImportPopup(Popup):
 
 
 class SaveAsPopup(Popup):
-
     def __init__(self, chisel):
         self.chisel = chisel
         self.save_type = None
-        self.choices = {
-            "background": ".png " + _("(with background)"),
-            "transparent": ".png " + _("(transparent)"),
-            "project": PROJECT_EXTENSION,
-            "all": _("All")
-        }
+        self.choices = {"background": ".png " + _("(with background)"),
+                        "transparent": ".png " + _("(transparent)"),
+                        "project": PROJECT_EXTENSION,
+                        "all": _("All")}
 
         layout = BoxLayout(orientation="vertical",
                            spacing=dp(34),
                            padding=(dp(20), dp(15)))
+
         self.file_chooser = FileChooserListView(path=get_saves_path(),
                                                 filters=[self._filter_file],
                                                 size_hint=(1, 0.75))
@@ -265,14 +265,17 @@ class SaveAsPopup(Popup):
         sublayout = BoxLayout(orientation="horizontal",
                               spacing=dp(10),
                               size_hint=(1, 0.1))
+
         self.text_input = TextInput(text="Untitled",
                                     multiline=False,
                                     font_name=FONT.get(),
                                     font_size=sp(16),
                                     size_hint_x=0.6)
+
         self.save_type_btn = KivyButton(text=_("Select file type"),
                                         font_name=FONT.get(),
                                         size_hint_x=0.4)
+
         sublayout.add_widget(self.text_input)
         sublayout.add_widget(self.save_type_btn)
 
@@ -281,10 +284,8 @@ class SaveAsPopup(Popup):
                                font_size=sp(16),
                                size_hint=(1, 0.15))
 
-        self.file_chooser.bind(path=self._change_title,
-                               selection=self._set_text)
-        self.text_input.bind(text=self._on_text_input,
-                             on_text_validate=self._save_file)
+        self.file_chooser.bind(path=self._change_title, selection=self._set_text)
+        self.text_input.bind(text=self._on_text_input, on_text_validate=self._save_file)
         self.save_type_btn.bind(on_release=self.open_save_type_popup)
         self.save_btn.bind(on_release=self._save_file)
 
@@ -296,27 +297,25 @@ class SaveAsPopup(Popup):
 
     @staticmethod
     def _filter_file(folder, filename):
-        return (filename.endswith(PROJECT_EXTENSION)
-                or filename.endswith(".png"))
+        return filename.endswith(PROJECT_EXTENSION) or filename.endswith(".png")
 
     def get_maybe_shortened_filename(self):
-        string = self.get_resolved_filename()
-        if len(string) > 24:
-            parts = string.rsplit(".", 1)
-            if len(parts) > 1:
-                filename, ext = parts
-                return filename[:6] + "..." + filename[-5:] + "." + ext
-            return parts[0][:6] + "..." + parts[0][-5:]
-        return string
+        filename = self.get_resolved_filename()
+        if len(filename) > 24:
+            filename, _, ext = filename.rpartition(".")
+            if ext:
+                return f"{filename[:6]}...{filename[-5:]}.{ext}"
+            return f"{filename[:6]}...{filename[-5:]}"
+        return filename
 
     def get_resolved_filename(self):
-        string = self.text_input.text
+        filename = self.text_input.text
         ext = self._get_file_extension()
         if ext is None:
-            return string
-        if not string.endswith(ext):
-            string += ext
-        return string
+            return filename
+        if not filename.endswith(ext):
+            return filename + ext
+        return filename
 
     def _change_title(self, *args):
         path = self.file_chooser.path
@@ -347,8 +346,8 @@ class SaveAsPopup(Popup):
     def _change_btn_name(self, *args):
         if self.save_type is None:
             return
-        self.save_btn.text = _('Save as "{filename}"').format(
-            filename=self.get_maybe_shortened_filename())
+        filename = self.get_maybe_shortened_filename()
+        self.save_btn.text = _('Save as "{filename}"').format(filename=filename)
 
     def _save_file(self, *args):
         try:
@@ -378,12 +377,10 @@ class SaveAsPopup(Popup):
         self._change_btn_name()
 
     def _get_file_extension(self):
-        extensions = {
-            "background": ".png",
-            "transparent": ".png",
-            "project": PROJECT_EXTENSION,
-            "all": None
-        }
+        extensions = {"background": ".png",
+                      "transparent": ".png",
+                      "project": PROJECT_EXTENSION,
+                      "all": None}
         return extensions[self.save_type]
 
     def _do_saves(self):
@@ -398,16 +395,13 @@ class SaveAsPopup(Popup):
             bg_path = trans_path = project_path = path / filename
 
         bg_func = lambda: self.chisel.export_png(bg_path, transparent=False)
-        trans_func = lambda: self.chisel.export_png(trans_path,
-                                                    transparent=True)
+        trans_func = lambda: self.chisel.export_png(trans_path, transparent=True)
         project_func = lambda: self.chisel.save(project_path)
         all_func = lambda: bg_func() or trans_func() or project_func()
-        functions = {
-            "background": bg_func,
-            "transparent": trans_func,
-            "project": project_func,
-            "all": all_func
-        }
+        functions = {"background": bg_func,
+                     "transparent": trans_func,
+                     "project": project_func,
+                     "all": all_func}
         functions[self.save_type]()
 
     def on_dismiss(self, *args):
@@ -521,7 +515,7 @@ class OptionsPanel(RepeatingBackground, BoxLayout):
 
     def reset_chisel(self, *args):
         Window.remove_widget(CURSOR)
-        popup = open_loading_popup(_("Resetting the canvas."))
+        popup = open_loading_popup(_("Resetting the canvas..."))
         Clock.schedule_once(lambda dt: (self.chisel.reset()
                                         or popup.dismiss()
                                         or Window.add_widget(CURSOR, "after")), 0.1)
