@@ -98,7 +98,7 @@ class Pebble:
         self.pixel = stone.pixels[index]
         self.x, self.y = x, y
         self.velocity = velocity
-        self.update = Clock.schedule_interval(self.step, 0)
+        self.update = Clock.schedule_interval(self.step, 1/30)
 
     def step(self, dt):
         """Gravity Physics"""
