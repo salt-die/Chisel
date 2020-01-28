@@ -11,6 +11,7 @@ from kivy.app import App
 from kivy.clock import Clock
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Rectangle
+from kivy.graphics.fbo import Fbo
 
 GRAVITY = .02
 FRICTION = .9
@@ -91,12 +92,11 @@ class Pebble:
     """
     This handles physics for dislodged pebbles. Deletes itself after pebbles reach the floor.
     """
-    def __init__(self, index, stone, x, y, z, velocity):
-        self.index = index
+    def __init__(self, index, stone, x, y, velocity):
         self.stone = stone
         self.pos = stone.positions[index]
         self.pixel = stone.pixels[index]
-        self.x, self.y, self.z = x, y, z
+        self.x, self.y = x, y
         self.velocity = velocity
         self.update = Clock.schedule_interval(self.step, 0)
 
@@ -111,8 +111,6 @@ class Pebble:
         x, y = self.x, self.y
         if not 0 < x < 1:
             vx *= -1
-        if y > 1:
-            vy *= -1
 
         self.velocity = vx, vy
         self.x, self.y = x + vx, max(0, y + vy)
@@ -125,9 +123,9 @@ class Pebble:
         scaled_x, scaled_y = x * stone.width, y * stone.height
         self.pixel.pos = scaled_x, scaled_y
 
-        if not self.y:
+        if not y:
             self.update.cancel()
-            del stone.pebbles[self.index]  # Remove reference // kill this object
+            stone.pebbles.remove(self) # Remove reference // kill this object
 
 
 class Chisel(Widget):
@@ -149,7 +147,7 @@ class Chisel(Widget):
         return scaled_w / pebbles_per_row, scaled_h / pebbles_per_column
 
     def setup_canvas(self):
-        self.pebbles = {}
+        self.pebbles = []
         self.positions = []
         self.rgba = []
         self.colors = []
@@ -157,8 +155,13 @@ class Chisel(Widget):
         self.pebble_size = size = self.get_pebble_size()
 
         with self.canvas:
+            self.fbo = Fbo()
+            Color(1, 1, 1, 1)
+            self.fbo_rect = Rectangle()
+
+        with self.fbo:
             self.background_color = Color(1, 1, 1, 1)
-            self.background = Rectangle(pos=self.pos, size=self.size, source=BACKGROUND)
+            self.background = Rectangle(source=BACKGROUND)
 
             for depth, color_scale in enumerate((.4, .6, 1)):
                 for x, y, (r, g, b, a) in pebble_setup():
@@ -172,6 +175,7 @@ class Chisel(Widget):
                     self.pixels.append(Rectangle(pos=(scaled_x, scaled_y), size=size))
 
         self.background.texture.mag_filter = 'nearest'
+        self.texture = self.fbo.texture
 
     def _delayed_resize(self, *args):
         self.resize_event.cancel()
@@ -180,12 +184,18 @@ class Chisel(Widget):
     def resize(self, *args):
         self.background.pos = self.pos
         self.background.size = self.size
+
         self.pebble_size = size = self.get_pebble_size()
         for pixel, (x, y, _) in zip(self.pixels, self.positions):
             scaled_x = x * self.width
             scaled_y = y * self.height
             pixel.pos = scaled_x, scaled_y
             pixel.size = size
+
+        self.fbo.size = self.size
+        self.fbo_rect.pos = self.pos
+        self.fbo_rect.size = self.size
+        self.fbo_rect.texture= self.fbo.texture
 
     def poke_power(self, tx, ty, touch_velocity, pebble_x, pebble_y):
         """
@@ -217,7 +227,7 @@ class Chisel(Widget):
                 dislodged[x, y] = (z, i, velocity)
 
         for (x, y), (z, i, velocity) in dislodged.items():
-            self.pebbles[i] = Pebble(i, self, x, y, z, velocity)
+            self.pebbles.append(Pebble(i, self, x, y, velocity))
 
     def on_touch_down(self, touch):
         self.poke(touch)
@@ -232,6 +242,7 @@ class Chisel(Widget):
         CURRENT_IMAGE[:] = list(choice(PEBBLE_IMAGES))
         self.canvas.clear()
         self.setup_canvas()
+        self.resize()
 
     def save(self, path_to_file):
         _, pebbles_per_row, pebbles_per_column = CURRENT_IMAGE
@@ -254,7 +265,7 @@ class Chisel(Widget):
 
         CURRENT_IMAGE[1:] = pebble_dict['aspect']
 
-        self.pebbles = {}
+        self.pebbles = []
         self.positions = pebble_dict['positions']
         self.rgba = pebble_dict['colors']
         self.colors = []
@@ -263,6 +274,11 @@ class Chisel(Widget):
 
         self.canvas.clear()
         with self.canvas:
+            self.fbo = Fbo()
+            Color(1, 1, 1, 1)
+            self.fbo_rect = Rectangle()
+
+        with self.fbo:
             self.background_color = Color(1, 1, 1, 1)
             self.background = Rectangle(pos=self.pos, size=self.size, source=BACKGROUND)
             for (x, y, _), color in zip(self.positions, self.rgba):
