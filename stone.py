@@ -211,7 +211,7 @@ class Chisel(Widget):
 
         for i, (x, y, z) in enumerate(self.positions):
             velocity = is_dislodged(self.poke_power(tx, ty, touch_velocity, x, y))
-            if velocity and ((x, y) not in dislodged or dislodged[x, y][0] < z):
+            if velocity and dislodged.get((x, y), (-1,))[0] < z:
                 dislodged[x, y] = (z, i, velocity)
 
         for (x, y), (z, i, velocity) in dislodged.items():
