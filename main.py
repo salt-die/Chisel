@@ -5,7 +5,6 @@ simulation! A caveman workout routine guaranteed to give you chiseled slabs fast
 """
 import contextvars
 from itertools import cycle
-import math
 from pathlib import Path
 import webbrowser
 
@@ -572,7 +571,8 @@ class ChiselApp(App):
         return root
 
     def _set_side_panel_opacity(self, instance, value):
-        instance.side_panel.opacity = math.ceil(instance._anim_progress)
+        print(instance._anim_progress)
+        instance.side_panel.opacity = 1 if instance._anim_progress else 0
 
     def disable_chisel(self, instance, value):
         if instance._anim_progress > 0:
