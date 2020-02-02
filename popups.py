@@ -273,6 +273,8 @@ class SaveAsPopup(Popup):
         self.save_btn.text = _('Save as "{filename}"').format(filename=filename)
 
     def _save_file(self, *args):
+        if self.save_type is None:
+            return
         try:
             self._do_saves()
         except OSError:
