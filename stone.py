@@ -155,7 +155,7 @@ class Chisel(Widget):
 
         with self.canvas:
             self.background_color = Color(1, 1, 1, 1)
-            self.background = Rectangle(source=BACKGROUND)
+            self.background = Rectangle(pos=self.pos, size=self.size, source=BACKGROUND)
 
             for depth, color_scale in enumerate((.4, .6, 1)):
                 for x, y, (r, g, b, a) in pebble_setup():

@@ -394,10 +394,20 @@ class SaveAsPopup(Popup):
         else:
             bg_path = trans_path = project_path = path / filename
 
-        bg_func = lambda: self.chisel.export_png(bg_path, transparent=False)
-        trans_func = lambda: self.chisel.export_png(trans_path, transparent=True)
-        project_func = lambda: self.chisel.save(project_path)
-        all_func = lambda: bg_func() or trans_func() or project_func()
+        def bg_func():
+            self.chisel.export_png(bg_path, transparent=False)
+
+        def trans_func():
+            self.chisel.export_png(trans_path, transparent=True)
+
+        def project_func():
+            self.chisel.save(project_path)
+
+        def all_func():
+            bg_func()
+            trans_func()
+            project_func()
+
         functions = {"background": bg_func,
                      "transparent": trans_func,
                      "project": project_func,
@@ -516,9 +526,12 @@ class OptionsPanel(RepeatingBackground, BoxLayout):
     def reset_chisel(self, *args):
         Window.remove_widget(CURSOR)
         popup = open_loading_popup(_("Resetting the canvas..."))
-        Clock.schedule_once(lambda dt: (self.chisel.reset()
-                                        or popup.dismiss()
-                                        or Window.add_widget(CURSOR, "after")), 0.1)
+
+        def reset(dt):
+            self.chisel.reset()
+            popup.dismiss()
+            Window.add_widget(CURSOR, "after")
+        Clock.schedule_once(reset, 0.1)
 
     def bind_to_burger(self, burger):
         def _reposition(*args):
