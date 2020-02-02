@@ -35,6 +35,7 @@ class Popup(SignBorder, KivyPopup):
                          separator_color=(0, 0, 0, 0),
                          background=BUTTON_PRESSED,
                          **kwargs)
+
         self.setup_border()
 
 
@@ -43,11 +44,13 @@ class InfoPopup(Popup):
         layout = BoxLayout(orientation="vertical",
                            spacing=dp(34),
                            padding=(dp(20), dp(15)))
+
         self.label = Label(text=text,
                            font_name=font_name,
                            font_size=sp(20),
                            halign="center",
                            valign="middle")
+
         layout.add_widget(self.label)
         self.label.bind(size=self._resize_label)
 
@@ -59,7 +62,7 @@ class InfoPopup(Popup):
         self._resize_label()
 
         if dismissable:
-            btn = Button(_("Cancel"), font_size=sp(16), size_hint=(1, 0.35))
+            btn = Button(_("Cancel"), font_name, font_size=sp(16), size_hint=(1, 0.35))
             layout.add_widget(btn)
             btn.bind(on_release=self.dismiss)
 
@@ -88,7 +91,7 @@ class SelectionPopup(Popup):
                            padding=(dp(20), dp(15)))
 
         for key, string in choices.items():
-            btn = Button(string, font_name=font_name, font_size=sp(16))
+            btn = Button(string, font_name, font_size=sp(16))
 
             def _make_select_function(key):
                 def _select(btn):
@@ -176,17 +179,13 @@ class SaveAsPopup(Popup):
                         "project": PROJECT_EXTENSION,
                         "all": _("All")}
 
-        layout = BoxLayout(orientation="vertical",
-                           spacing=dp(34),
-                           padding=(dp(20), dp(15)))
+        layout = BoxLayout(orientation="vertical", spacing=dp(34), padding=(dp(20), dp(15)))
 
         self.file_chooser = FileChooserListView(path=get_saves_path(),
                                                 filters=[self._filter_file],
                                                 size_hint=(1, 0.75))
 
-        sublayout = BoxLayout(orientation="horizontal",
-                              spacing=dp(10),
-                              size_hint=(1, 0.1))
+        sublayout = BoxLayout(orientation="horizontal", spacing=dp(10), size_hint=(1, 0.1))
 
         self.text_input = TextInput(text="Untitled",
                                     multiline=False,
@@ -202,8 +201,8 @@ class SaveAsPopup(Popup):
         sublayout.add_widget(self.save_type_btn)
 
         self.save_btn = Button(_("Please select a file type."),
-                               disabled=True,
                                font_name=font_name,
+                               disabled=True,
                                font_size=sp(16),
                                size_hint=(1, 0.15))
 
