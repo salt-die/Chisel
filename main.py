@@ -436,7 +436,6 @@ class OptionsPanel(RepeatingBackground, BoxLayout):
 
         FONT.set(LOCALES[locale]["font"])
 
-        # Title
         title = Label(text=_("Options"),
                       font_name=FONT.get(),
                       font_size=sp(30),
@@ -444,35 +443,30 @@ class OptionsPanel(RepeatingBackground, BoxLayout):
                       outline_color=(0, 0, 0),
                       outline_width=2)
 
-        # Language selection
         language_btn = Button(_("Select language"),
                               font_size=sp(18),
                               size_hint=(1, None),
                               height=dp(44))
         language_btn.bind(on_release=self.open_language_popup)
 
-        # Import
         import_btn = Button(_("Import..."),
                             font_size=sp(18),
                             size_hint=(1, None),
                             height=dp(44))
         import_btn.bind(on_release=lambda btn: ImportPopup(self.chisel).open(btn))
 
-        # Save as
         save_as_btn = Button(_("Save as..."),
                              font_size=sp(18),
                              size_hint=(1, None),
                              height=dp(44))
         save_as_btn.bind(on_release=lambda btn: SaveAsPopup(self.chisel).open(btn))
 
-        # Reset
         reset_btn = Button(_("Reset"),
                            font_size=sp(18),
                            size_hint=(1, None),
                            height=dp(44))
         reset_btn.bind(on_release=self.reset_chisel)
 
-        # Source code
         src_btn = Button(_("Source code"),
                          font_size=sp(18),
                          size_hint=(1, None),
@@ -511,10 +505,11 @@ class OptionsPanel(RepeatingBackground, BoxLayout):
     def update_background(self, *args):
         # Overriden to snap to the right position.
         self.bg_rect.texture.uvsize = self._get_uvsize()
-        self.bg_rect.texture = self.bg_rect.texture  # Required to trigger update.
+        self.bg_rect.texture = self.bg_rect.texture  # required to trigger update
         bg_width, bg_height = self._get_background_size()
-        self.bg_rect.pos = (self.right - bg_width, self.y)
-        self.bg_rect.size = (bg_width, bg_height)
+        self.bg_rect.pos = self.right - bg_width, self.y
+        self.bg_rect.size = bg_width, bg_height
+
 
     def open_language_popup(self, *args):
         locales = {code: info["name"] for code, info in LOCALES.items()}
@@ -534,8 +529,7 @@ class OptionsPanel(RepeatingBackground, BoxLayout):
 
     def bind_to_burger(self, burger):
         def _reposition(*args):
-            burger.pos = (self.right + dp(10),
-                          self.top - burger.height - dp(10))
+            burger.pos = self.right + dp(10), self.top - burger.height - dp(10)
         self.bind(pos=_reposition, size=_reposition)
 
 class ChiselApp(App):
@@ -571,7 +565,6 @@ class ChiselApp(App):
         return root
 
     def _set_side_panel_opacity(self, instance, value):
-        print(instance._anim_progress)
         instance.side_panel.opacity = 1 if instance._anim_progress else 0
 
     def disable_chisel(self, instance, value):
