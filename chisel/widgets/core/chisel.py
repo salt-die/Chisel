@@ -240,7 +240,7 @@ class Chisel(Widget):
         colors = []
         for pixel in self.pixels:
             if pixel.y:
-                positions.append([pixel.x, pixel.y, pixel.z])
+                positions.append((pixel.x, pixel.y, pixel.z))
                 colors.append(pixel.color.rgba)
 
         pebble_dict = {'positions': positions,
@@ -258,6 +258,7 @@ class Chisel(Widget):
 
         self.pebbles = {}
         self.pixels = []
+
         w, h = self.width, self.height
         self.pebble_size = size = self.get_pebble_size()
 
@@ -267,8 +268,8 @@ class Chisel(Widget):
             self.background = Rectangle(pos=self.pos, size=self.size, source=BACKGROUND)
             self.background.texture.mag_filter = 'nearest'
 
-            for (x, y, z), color in zip(pebble_dict['positions'], pebble_dict['colors']):
-                self.pixels.append(Pixel(x, y, z, w, h, color, size=size))
+            for pos, color in zip(pebble_dict['positions'], pebble_dict['colors']):
+                self.pixels.append(Pixel(*pos, w, h, color, size=size))
 
     def export_png(self, path_to_file, transparent=False):
         transparent_pixels = []  # We won't save pebbles on the floor.
