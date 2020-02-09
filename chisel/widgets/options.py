@@ -15,7 +15,7 @@ from .buttons import Button
 from .popups import SelectionPopup, ImportPopup, SaveAsPopup, open_loading_popup
 
 
-FONT = contextvars.ContextVar("font")
+FONT: contextvars.ContextVar[str] = contextvars.ContextVar("font")
 
 IMAGE_PATH = Path("assets", "img")
 OPTIONS_BACKGROUND = str(IMAGE_PATH / "options_background.png")
