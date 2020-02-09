@@ -91,10 +91,10 @@ class Pebble:
     """
     This handles physics for dislodged pebbles. Deletes itself after pebbles reach the floor.
     """
-    def __init__(self, index, pixel, stone, velocity):
+    def __init__(self, index, pixel, chisel, velocity):
         self.index = index
         self.pixel = pixel
-        self.stone = stone
+        self.chisel = chisel
         self.velocity = velocity
         self.update = Clock.schedule_interval(self.step, 1/30)
 
@@ -111,12 +111,12 @@ class Pebble:
 
         self.velocity = vx, vy
         self.pixel.x, self.pixel.y = x + vx, max(0, y + vy)
-        stone = self.stone
-        self.pixel.rescale(stone.width, stone.height)
+        chisel = self.chisel
+        self.pixel.rescale(chisel.width, chisel.height)
 
         if not self.pixel.y:
             self.update.cancel()
-            del stone.pebbles[self.index] # Remove reference // kill this object
+            del chisel.pebbles[self.index] # Remove reference // kill this object
 
 
 class Pixel(Rectangle):
