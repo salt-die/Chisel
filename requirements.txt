@@ -9,6 +9,7 @@ kivy-garden
 contextvars; python_version < "3.7"
 Babel
 numpy
+Pillow
 simpleaudio
 
 --pre
