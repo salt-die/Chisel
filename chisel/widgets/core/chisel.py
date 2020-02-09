@@ -4,7 +4,7 @@ from pathlib import Path
 from random import choice
 
 import numpy as np
-import simpleaudio as sa # sdl2_mixer non-functional for me so I resorted to this --salt-die
+import simpleaudio as sa  # sdl2_mixer non-functional for me so I resorted to this --salt-die
 from PIL import Image
 
 from kivy.app import App
@@ -91,12 +91,13 @@ class Pebble:
     """
     This handles physics for dislodged pebbles. Deletes itself after pebbles reach the floor.
     """
+
     def __init__(self, index, pixel, chisel, velocity):
         self.index = index
         self.pixel = pixel
         self.chisel = chisel
         self.velocity = velocity
-        self.update = Clock.schedule_interval(self.step, 1/30)
+        self.update = Clock.schedule_interval(self.step, 1 / 30)
 
     def step(self, dt):
         """Gravity Physics"""
@@ -116,13 +117,14 @@ class Pebble:
 
         if not self.pixel.y:
             self.update.cancel()
-            del chisel.pebbles[self.index] # Remove reference // kill this object
+            del chisel.pebbles[self.index]  # Remove reference // kill this object
 
 
 class Pixel(Rectangle):
     """
     Kivy Rectangle with unscaled coordinates (x, y) and color information.
     """
+
     def __init__(self, x, y, z, screen_width, screen_height, color, *args, **kwargs):
         self.x = x
         self.y = y
@@ -139,6 +141,7 @@ class Chisel(Widget):
     """
     Handles collision detection between pebbles and the hammer.  Creates Pebbles on collision.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.sounds = tuple(sa.WaveObject.from_wave_file(sound) for sound in SOUND)
@@ -165,7 +168,7 @@ class Chisel(Widget):
             self.background = Rectangle(pos=self.pos, size=self.size, source=BACKGROUND)
             self.background.texture.mag_filter = 'nearest'
 
-            for z, color_scale in enumerate((.4, .6, 1)): # The different layers of stone.
+            for z, color_scale in enumerate((.4, .6, 1)):  # The different layers of stone.
                 for x, y, (r, g, b, a) in pebble_setup():
                     color = color_scale * r, color_scale * g, color_scale * b, a
                     self.pixels.append(Pixel(x, y, z, w, h, color, size=size))
@@ -276,7 +279,7 @@ class Chisel(Widget):
         if transparent:
             self.background_color.a = 0
 
-        buffer = io.BytesIO() # Kivy hides filename errors, so we export to buffer first.
+        buffer = io.BytesIO()  # Kivy hides filename errors, so we export to buffer first.
         self.export_as_image().save(buffer, fmt="png")
 
         with open(path_to_file, "wb") as file:
