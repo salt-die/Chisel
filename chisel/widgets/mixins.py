@@ -10,6 +10,7 @@ BORDER_IMAGE = str(Path("assets", "img", "sign_border.png"))
 
 class RepeatingBackground:
     """Inherit this mixin to easily support repeating background in a widget."""
+
     def setup_background(self, bg_image, delay=0, color=(1, 1, 1, 1)):
         """Setup the repeating background.
 
@@ -72,6 +73,7 @@ class RepeatingBackground:
 
 class SignBorder:
     """Inherit this mixin to add a sign border to the widget."""
+
     def setup_border(self):
         self.size_offset = 32
         with self.canvas.after:

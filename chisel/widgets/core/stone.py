@@ -4,7 +4,7 @@ from pathlib import Path
 from random import choice
 
 import numpy as np
-import simpleaudio as sa # sdl2_mixer non-functional for me so I resorted to this --salt-die
+import simpleaudio as sa  # sdl2_mixer non-functional for me so I resorted to this --salt-die
 from PIL import Image
 
 from kivy.app import App
@@ -91,6 +91,7 @@ class Pebble:
     """
     This handles physics for dislodged pebbles. Deletes itself after pebbles reach the floor.
     """
+
     def __init__(self, index, stone, x, y, velocity):
         self.index = index
         self.stone = stone
@@ -98,7 +99,7 @@ class Pebble:
         self.pixel = stone.pixels[index]
         self.x, self.y = x, y
         self.velocity = velocity
-        self.update = Clock.schedule_interval(self.step, 1/30)
+        self.update = Clock.schedule_interval(self.step, 1 / 30)
 
     def step(self, dt):
         """Gravity Physics"""
@@ -124,13 +125,14 @@ class Pebble:
 
         if not y:
             self.update.cancel()
-            del stone.pebbles[self.index] # Remove reference // kill this object
+            del stone.pebbles[self.index]  # Remove reference // kill this object
 
 
 class Chisel(Widget):
     """
     Handles collision detection between pebbles and the hammer.  Creates Pebbles on collision.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.sounds = tuple(sa.WaveObject.from_wave_file(sound) for sound in SOUND)
@@ -269,7 +271,6 @@ class Chisel(Widget):
                 scaled_y = y * self.height
                 self.pixels.append(Rectangle(pos=(scaled_x, scaled_y), size=size))
         self.background.texture.mag_filter = 'nearest'
-
 
     def export_png(self, path_to_file, transparent=False):
         colors = []  # We won't save pebbles on the floor.

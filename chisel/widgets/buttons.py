@@ -5,7 +5,7 @@ from kivy.uix.button import ButtonBehavior
 from kivy.uix.image import Image
 from kivy.core.window import Window
 
-from mixins import SignBorder
+from .mixins import SignBorder
 
 IMAGE_PATH = Path("assets", "img")
 BUTTON_NORMAL = str(IMAGE_PATH / "button" / "normal.png")

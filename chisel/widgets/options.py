@@ -1,7 +1,6 @@
 import contextvars
 from itertools import cycle
 from pathlib import Path
-from i18n import DEFAULT_LOCALE, SYSTEM_LOCALE, LOCALES, TRANSLATIONS
 import webbrowser
 
 from kivy.uix.boxlayout import BoxLayout
@@ -10,9 +9,10 @@ from kivy.metrics import dp, sp
 from kivy.uix.image import Image
 from kivy.uix.label import Label
 
-from mixins import RepeatingBackground
-from buttons import Button
-from popups import SelectionPopup, ImportPopup, SaveAsPopup, open_loading_popup
+from ..utils.i18n import DEFAULT_LOCALE, SYSTEM_LOCALE, LOCALES, TRANSLATIONS
+from .mixins import RepeatingBackground
+from .buttons import Button
+from .popups import SelectionPopup, ImportPopup, SaveAsPopup, open_loading_popup
 
 
 FONT = contextvars.ContextVar("font")

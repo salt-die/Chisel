@@ -10,13 +10,14 @@ from kivy.uix.label import Label
 from kivy.properties import StringProperty
 from kivy.uix.textinput import TextInput
 
-from mixins import SignBorder
-from buttons import Button
+from .mixins import SignBorder
+from .buttons import Button
 
 IMAGE_PATH = Path("assets", "img")
 BUTTON_PRESSED = str(IMAGE_PATH / "button" / "pressed.png")
 PROJECT_EXTENSION = ".chisel-project"
 MAX_FILENAME_LENGTH = 128
+
 
 def get_saves_path():
     path = Path.cwd()

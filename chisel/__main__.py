@@ -11,10 +11,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.garden.navigationdrawer import NavigationDrawer
 
-from cursor import Cursor
-from options import OptionsPanel
-from buttons import BurgerButton
-from stone import Chisel
+from .widgets import BurgerButton, Chisel, Cursor, OptionsPanel
 
 
 IMAGE_PATH = Path("assets", "img")
