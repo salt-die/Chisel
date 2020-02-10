@@ -66,10 +66,7 @@ class BurgerButton(ButtonBehavior, Image):
             self._on_mouse_pos(override=True)
 
 class ToolButton(ToggleButtonBehavior, Image):
-    """
-    Duplicated BurgerButton -- but we can pass in the source images and texture.mag_filter
-    will always be set to 'nearest'.
-    """
+    """Toggle buttons for tool selection."""
     def __init__(self, normal, pressed, *args, **kwargs):
         self._normal = normal
         self._pressed = pressed

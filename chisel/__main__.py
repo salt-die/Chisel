@@ -44,11 +44,9 @@ class ChiselApp(App):
         rel_layout.add_widget(chisel)
 
         tools = (ToolButton(*sources) for sources in zip(TOOLS_NORMAL, TOOLS_PRESSED))
-
         funcs = (lambda touch: (self.chisel.tool(0), self.cursor.tool(0)),
                  lambda touch: (self.chisel.tool(1), self.cursor.tool(1)),
                  lambda touch: (self.chisel.tool(2), self.cursor.tool(2)))
-
         for i, (tool, func) in enumerate(zip(tools, funcs)):
             tool.pos_hint = {"x": i * .1 + .4, "y": .01}
             tool.bind(on_press=func)
