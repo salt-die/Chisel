@@ -43,7 +43,7 @@ class ChiselApp(App):
         rel_layout = RelativeLayout() # This layout allows navdrawer to push contained widgets.
         rel_layout.add_widget(chisel)
 
-        tools = tuple(ToolButton(*sources) for sources in zip(TOOLS_NORMAL, TOOLS_PRESSED))
+        tools = (ToolButton(*sources) for sources in zip(TOOLS_NORMAL, TOOLS_PRESSED))
 
         funcs = (lambda touch: (self.chisel.tool(0), self.cursor.tool(0)),
                  lambda touch: (self.chisel.tool(1), self.cursor.tool(1)),
