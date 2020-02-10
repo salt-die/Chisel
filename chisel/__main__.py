@@ -11,16 +11,19 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.relativelayout import RelativeLayout
 from kivy.garden.navigationdrawer import NavigationDrawer
 
-from .widgets import BurgerButton, Chisel, Cursor, OptionsPanel
+from .widgets import BurgerButton, Chisel, Cursor, OptionsPanel, ToolButton
 
 
 IMAGE_PATH = Path("assets", "img")
 ICON = str(IMAGE_PATH / "icon.png")
-
+TOOLS_NORMAL = tuple(str(IMAGE_PATH / "cursor" / f"up_{i}.png") for i in range(3))
+TOOLS_PRESSED = tuple(str(IMAGE_PATH / "cursor" / f"selected_{i}.png") for i in range(3))
+TOOLS_HOVER = tuple(str(IMAGE_PATH / "cursor" / f"down_{i}.png") for i in range(3))
 
 class ChiselApp(App):
     def build(self):
         self.icon = ICON
+        self.cursor = Cursor()
         Window.minimum_width, Window.minimum_height = Window.size
         root = FloatLayout()
         navdrawer = NavigationDrawer()
@@ -45,9 +48,23 @@ class ChiselApp(App):
         navdrawer.bind(_anim_progress=self._set_side_panel_opacity)
         navdrawer.bind(_anim_progress=self.disable_chisel)
 
+        tools = tuple(ToolButton(normal, pressed, hover)
+                      for normal, pressed, hover in zip(TOOLS_NORMAL,
+                                                        TOOLS_PRESSED,
+                                                        TOOLS_HOVER))
+        def set_tool(i):
+            self.chisel.tool = i
+            self.cursor.tool = i
+
+        for i, tool in enumerate(tools):
+            tool.bind(on_release=lambda touch:set_tool(i))
+
         root.add_widget(navdrawer)
         root.add_widget(burger)
-        Window.add_widget(Cursor(), canvas="after")
+        for tool in tools:
+            root.add_widget(tool)
+
+        Window.add_widget(self.cursor, canvas="after")
         return root
 
     def _set_side_panel_opacity(self, instance, value):
