@@ -18,11 +18,11 @@ class CursorImage(Image):
         self.size = (40, 40)
 
     def on_touch_down(self, touch):
-        self.source = DOWN[self._tool]
+        self.source = DOWN[self.tool]
         self.texture.mag_filter = 'nearest'
 
     def on_touch_up(self, touch):
-        self.source = UP[self._tool]
+        self.source = UP[self.tool]
         self.texture.mag_filter = 'nearest'
 
 
