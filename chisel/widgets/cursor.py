@@ -11,18 +11,27 @@ DOWN = tuple(str(CURSOR_PATH / f"down_{i}.png") for i in range(3))
 
 class CursorImage(Image):
     def __init__(self):
-        self.tool = 0
+        self._tool = 0
         super().__init__(source=UP[self.tool])
         self.texture.mag_filter = 'nearest'
         self.allow_stretch = True
         self.size = (40, 40)
 
+    @property
+    def tool(self):
+        return self._tool
+
+    @tool.setter
+    def tool(self, value):
+        self._tool = value
+        self.on_touch_down(None)
+
     def on_touch_down(self, touch):
-        self.source = DOWN[self.tool]
+        self.source = DOWN[self._tool]
         self.texture.mag_filter = 'nearest'
 
     def on_touch_up(self, touch):
-        self.source = UP[self.tool]
+        self.source = UP[self._tool]
         self.texture.mag_filter = 'nearest'
 
 

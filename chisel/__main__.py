@@ -40,13 +40,8 @@ class ChiselApp(App):
         burger = BurgerButton()
         burger.bind(on_release=navdrawer.toggle_state)
 
-        rel_layout = RelativeLayout()
-        rel_layout.add_widget(chisel)  # To push it when side panel is opened.
-        navdrawer.add_widget(rel_layout)
-        options_panel.build()
-        options_panel.bind_to_burger(burger)
-        navdrawer.bind(_anim_progress=self._set_side_panel_opacity)
-        navdrawer.bind(_anim_progress=self.disable_chisel)
+        rel_layout = RelativeLayout() # This layout allows navdrawer to push contained widgets.
+        rel_layout.add_widget(chisel)
 
         tools = tuple(ToolButton(*sources) for sources in zip(TOOLS_NORMAL, TOOLS_PRESSED))
 
@@ -54,14 +49,20 @@ class ChiselApp(App):
                  lambda touch: (self.chisel.tool(1), self.cursor.tool(1)),
                  lambda touch: (self.chisel.tool(2), self.cursor.tool(2)))
 
-        for i, (tool, on_release) in enumerate(zip(tools, funcs)):
-            tool.pos_hint = {"x": i * .1 + .4, "y": .05}
-            tool.bind(on_release=on_release)
+        for i, (tool, func) in enumerate(zip(tools, funcs)):
+            tool.pos_hint = {"x": i * .1 + .4, "y": .01}
+            tool.bind(on_press=func)
+            rel_layout.add_widget(tool)
+
+        navdrawer.add_widget(rel_layout)
+        options_panel.build()
+        options_panel.bind_to_burger(burger)
+        navdrawer.bind(_anim_progress=self._set_side_panel_opacity)
+        navdrawer.bind(_anim_progress=self.disable_chisel)
 
         root.add_widget(navdrawer)
         root.add_widget(burger)
-        for tool in tools:
-            root.add_widget(tool)
+
 
         Window.add_widget(self.cursor, canvas="after")
         return root
