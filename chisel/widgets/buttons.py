@@ -4,6 +4,7 @@ from kivy.uix.button import Button as KivyButton
 from kivy.uix.button import ButtonBehavior
 from kivy.uix.image import Image
 from kivy.core.window import Window
+from kivy.uix.behaviors import ToggleButtonBehavior
 
 from .mixins import SignBorder
 
@@ -26,8 +27,10 @@ class Button(SignBorder, KivyButton):
                          valign="middle",
                          **kwargs)
         self.setup_border()
+
         self.bind(size=self._on_size)
         Window.bind(mouse_pos=self._on_mouse_pos)
+
         self.background_normal = BUTTON_NORMAL
         self.background_down = BUTTON_PRESSED
 
@@ -44,6 +47,7 @@ class Button(SignBorder, KivyButton):
 class BurgerButton(ButtonBehavior, Image):
     def __init__(self):
         super().__init__(source=BURGER_NORMAL, size_hint=(None, None))
+
         Window.bind(mouse_pos=self._on_mouse_pos)
         self.bind(state=self._on_state, pos=self._on_mouse_pos)
 
@@ -61,35 +65,23 @@ class BurgerButton(ButtonBehavior, Image):
         else:
             self._on_mouse_pos(override=True)
 
-class ToolButton(ButtonBehavior, Image):
+class ToolButton(ToggleButtonBehavior, Image):
     """
     Duplicated BurgerButton -- but we can pass in the source images and texture.mag_filter
     will always be set to 'nearest'.
     """
-    def __init__(self, normal, pressed, hover, *args, **kwargs):
+    def __init__(self, normal, pressed, *args, **kwargs):
         self._normal = normal
         self._pressed = pressed
-        self._hover = hover
+
         super().__init__(source=normal, size_hint=(.1, .1))
+
+        self.group = 'tool_button'
         self.allow_stretch = True
         self.texture.mag_filter = "nearest"
 
-        Window.bind(mouse_pos=self._on_mouse_pos)
-        self.bind(state=self._on_state, pos=self._on_mouse_pos)
-
-    def _on_mouse_pos(self, *args, override=False):
-        if self.state == "down" and not override:
-            return
-        if self.collide_point(*self.to_widget(*Window.mouse_pos)):
-            self.source = self._hover
-            self.texture.mag_filter = "nearest"
-        else:
-            self.source = self._normal
-            self.texture.mag_filter = "nearest"
+        self.bind(state=self._on_state)
 
     def _on_state(self, *args):
-        if self.state == "down":
-            self.source = self._pressed
-            self.texture.mag_filter = "nearest"
-        else:
-            self._on_mouse_pos(override=True)
+        self.source = self._pressed if self.state == "down" else self._normal
+        self.texture.mag_filter = "nearest"

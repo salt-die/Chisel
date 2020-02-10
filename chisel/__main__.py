@@ -51,19 +51,9 @@ class ChiselApp(App):
         tools = tuple(ToolButton(normal, pressed, hover)
             for normal, pressed, hover in zip(TOOLS_NORMAL, TOOLS_PRESSED, TOOLS_HOVER))
 
-        def set_tool_0(touch):
-            self.chisel.tool = 0
-            self.cursor.tool = 0
-
-        def set_tool_1(touch):
-            self.chisel.tool = 1
-            self.cursor.tool = 1
-
-        def set_tool_2(touch):
-            self.chisel.tool = 2
-            self.cursor.tool = 2
-
-        funcs = set_tool_0, set_tool_1, set_tool_2
+        funcs = (lambda touch: (self.chisel.tool(0), self.cursor.tool(0)),
+                 lambda touch: (self.chisel.tool(1), self.cursor.tool(1)),
+                 lambda touch: (self.chisel.tool(2), self.cursor.tool(2)))
 
         for i, (tool, on_release) in enumerate(zip(tools, funcs)):
             tool.pos_hint = {"x": i * .1 + .4, "y": .05}

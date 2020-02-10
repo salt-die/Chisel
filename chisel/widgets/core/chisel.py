@@ -144,7 +144,7 @@ class Chisel(Widget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.tool = 0 # 0, 1, or 2
+        self._tool = 0 # 0, 1, or 2
         self.sounds = tuple(sa.WaveObject.from_wave_file(sound) for sound in SOUND)
         self.setup_canvas()
         self.resize_event = Clock.schedule_once(lambda dt: None, 0)
@@ -187,6 +187,9 @@ class Chisel(Widget):
             pixel.rescale(self.width, self.height)
             pixel.size = size
 
+    def tool(self, i):
+        self._tool = i
+
     def poke_power(self, tx, ty, touch_velocity, pebble_x, pebble_y):
         """
         Returns the force vector of a poke.
@@ -214,7 +217,7 @@ class Chisel(Widget):
         for i, pixel in enumerate(self.pixels):
             x, y, z = pixel.x, pixel.y, pixel.z
 
-            if z < self.tool: # Current tool can't chisel this depth.
+            if z < self._tool: # Current tool can't chisel this depth.
                 continue
 
             velocity = is_dislodged(self.poke_power(tx, ty, touch_velocity, x, y))

@@ -46,10 +46,5 @@ class Cursor(Widget):
     def on_cursor_enter(self, *args):
         self.opacity = 1
 
-    @property
-    def tool(self):
-        return self.cursor_img.tool
-
-    @tool.setter
-    def tool(self, value):
-        self.cursor_img.tool = value
+    def tool(self, i):
+        self.cursor_img.tool = i
