@@ -21,7 +21,7 @@ IMAGE_PATH = Path("assets", "img")
 OPTIONS_BACKGROUND = str(IMAGE_PATH / "options_background.png")
 CAVEMAN = tuple(str(IMAGE_PATH / "caveman" / f"{i}.png") for i in range(4))
 
-GITHUB_URL = "https://github.com/salt-die/code-jam-6/tree/master/circumstantial-companions"
+GITHUB_URL = "https://github.com/salt-die/Chisel"
 
 
 class OptionsPanel(RepeatingBackground, BoxLayout):
