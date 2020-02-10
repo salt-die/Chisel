@@ -74,6 +74,7 @@ class ToolButton(ToggleButtonBehavior, Image):
         super().__init__(source=normal, size_hint=(.1, .1))
 
         self.group = 'tool_button'
+        self.allow_no_selection = False
         self.allow_stretch = True
         self.texture.mag_filter = "nearest"
 

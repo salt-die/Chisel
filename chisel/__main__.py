@@ -50,6 +50,8 @@ class ChiselApp(App):
         for i, (tool, func) in enumerate(zip(tools, funcs)):
             tool.pos_hint = {"x": i * .1 + .4, "y": .01}
             tool.bind(on_press=func)
+            if not i: # First tool button is selected.
+                tool.state = "down"
             rel_layout.add_widget(tool)
 
         navdrawer.add_widget(rel_layout)
