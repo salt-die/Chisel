@@ -6,13 +6,13 @@ from kivy.uix.widget import Widget
 
 CURSOR_PATH = Path("assets", "img", "cursor")
 UP = tuple(str(CURSOR_PATH / f"up_{i}.png") for i in range(3))
-DOWN = tuple(str(CURSOR_PATH / "down_{i}.png") for i in range(3))
+DOWN = tuple(str(CURSOR_PATH / f"down_{i}.png") for i in range(3))
 
 
 class CursorImage(Image):
     def __init__(self):
-        super().__init__(source=UP)
         self.tool = 0
+        super().__init__(source=UP[self.tool])
         self.texture.mag_filter = 'nearest'
         self.allow_stretch = True
         self.size = (40, 40)
