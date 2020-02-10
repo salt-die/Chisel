@@ -18,7 +18,7 @@ IMAGE_PATH = Path("assets", "img")
 ICON = str(IMAGE_PATH / "icon.png")
 TOOLS_NORMAL = tuple(str(IMAGE_PATH / "cursor" / f"up_{i}.png") for i in range(3))
 TOOLS_PRESSED = tuple(str(IMAGE_PATH / "cursor" / f"selected_{i}.png") for i in range(3))
-TOOLS_HOVER = tuple(str(IMAGE_PATH / "cursor" / f"down_{i}.png") for i in range(3))
+
 
 class ChiselApp(App):
     def build(self):
@@ -48,8 +48,7 @@ class ChiselApp(App):
         navdrawer.bind(_anim_progress=self._set_side_panel_opacity)
         navdrawer.bind(_anim_progress=self.disable_chisel)
 
-        tools = tuple(ToolButton(normal, pressed, hover)
-            for normal, pressed, hover in zip(TOOLS_NORMAL, TOOLS_PRESSED, TOOLS_HOVER))
+        tools = tuple(ToolButton(*sources) for sources in zip(TOOLS_NORMAL, TOOLS_PRESSED))
 
         funcs = (lambda touch: (self.chisel.tool(0), self.cursor.tool(0)),
                  lambda touch: (self.chisel.tool(1), self.cursor.tool(1)),
