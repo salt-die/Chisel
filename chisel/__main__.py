@@ -40,7 +40,7 @@ class ChiselApp(App):
         burger = BurgerButton()
         burger.bind(on_release=navdrawer.toggle_state)
 
-        rel_layout = RelativeLayout() # This layout allows navdrawer to push contained widgets.
+        rel_layout = RelativeLayout()  # This layout allows navdrawer to push contained widgets.
         rel_layout.add_widget(chisel)
 
         tools = (ToolButton(*sources) for sources in zip(TOOLS_NORMAL, TOOLS_PRESSED))
@@ -50,7 +50,7 @@ class ChiselApp(App):
         for i, (tool, func) in enumerate(zip(tools, funcs)):
             tool.pos_hint = {"x": i * .1 + .4, "y": .01}
             tool.bind(on_press=func)
-            if not i: # First tool button is selected.
+            if not i:  # First tool button is selected.
                 tool.state = "down"
             rel_layout.add_widget(tool)
 
@@ -62,7 +62,6 @@ class ChiselApp(App):
 
         root.add_widget(navdrawer)
         root.add_widget(burger)
-
 
         Window.add_widget(self.cursor, canvas="after")
         return root

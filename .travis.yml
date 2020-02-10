@@ -11,5 +11,5 @@ install:
   - pip install -r requirements.txt
   - garden install navigationdrawer
 script:
-  - mypy chisel
-  - flake8 chisel
+  - mypy chisel main.py
+  - flake8 chisel main.py

@@ -10,7 +10,6 @@ contextvars; python_version < "3.7"
 Babel
 numpy
 Pillow
-simpleaudio
 
 --pre
 --extra-index-url https://kivy.org/downloads/simple/

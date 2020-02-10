@@ -65,6 +65,7 @@ class BurgerButton(ButtonBehavior, Image):
         else:
             self._on_mouse_pos(override=True)
 
+
 class ToolButton(ToggleButtonBehavior, Image):
     """Toggle buttons for tool selection."""
     def __init__(self, normal, pressed, *args, **kwargs):

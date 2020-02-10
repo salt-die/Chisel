@@ -4,11 +4,11 @@ from pathlib import Path
 from random import choice
 
 import numpy as np
-import simpleaudio as sa  # sdl2_mixer non-functional for me so I resorted to this --salt-die
 from PIL import Image
 
 from kivy.app import App
 from kivy.clock import Clock
+from kivy.core.audio import SoundLoader
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Rectangle
 
@@ -144,8 +144,8 @@ class Chisel(Widget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._tool = 0 # 0, 1, or 2
-        self.sounds = tuple(sa.WaveObject.from_wave_file(sound) for sound in SOUND)
+        self._tool = 0  # 0, 1, or 2
+        self.sounds = tuple(SoundLoader.load(sound) for sound in SOUND)
         self.setup_canvas()
         self.resize_event = Clock.schedule_once(lambda dt: None, 0)
         self.bind(size=self._delayed_resize, pos=self._delayed_resize)
@@ -217,7 +217,7 @@ class Chisel(Widget):
         for i, pixel in enumerate(self.pixels):
             x, y, z = pixel.x, pixel.y, pixel.z
 
-            if z < self._tool: # Current tool can't chisel this depth.
+            if z < self._tool:  # Current tool can't chisel this depth.
                 continue
 
             velocity = is_dislodged(self.poke_power(tx, ty, touch_velocity, x, y))
