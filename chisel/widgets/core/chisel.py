@@ -144,6 +144,7 @@ class Chisel(Widget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.tool = 0 # 0, 1, or 2
         self.sounds = tuple(sa.WaveObject.from_wave_file(sound) for sound in SOUND)
         self.setup_canvas()
         self.resize_event = Clock.schedule_once(lambda dt: None, 0)
@@ -212,6 +213,10 @@ class Chisel(Widget):
 
         for i, pixel in enumerate(self.pixels):
             x, y, z = pixel.x, pixel.y, pixel.z
+
+            if z < self.tool: # Current tool can't chisel this depth.
+                continue
+
             velocity = is_dislodged(self.poke_power(tx, ty, touch_velocity, x, y))
             pixel_depth, *_ = dislodged.get((x, y), (-1,))
             if velocity and pixel_depth < z:
