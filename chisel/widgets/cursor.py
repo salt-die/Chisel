@@ -5,23 +5,24 @@ from kivy.uix.image import Image
 from kivy.uix.widget import Widget
 
 CURSOR_PATH = Path("assets", "img", "cursor")
-UP = str(CURSOR_PATH / "up.png")
-DOWN = str(CURSOR_PATH / "down.png")
+UP = tuple(str(CURSOR_PATH / f"up_{i}.png") for i in range(3))
+DOWN = tuple(str(CURSOR_PATH / "down_{i}.png") for i in range(3))
 
 
 class CursorImage(Image):
     def __init__(self):
         super().__init__(source=UP)
+        self.tool = 0
         self.texture.mag_filter = 'nearest'
         self.allow_stretch = True
         self.size = (40, 40)
 
     def on_touch_down(self, touch):
-        self.source = DOWN
+        self.source = DOWN[self._tool]
         self.texture.mag_filter = 'nearest'
 
     def on_touch_up(self, touch):
-        self.source = UP
+        self.source = UP[self._tool]
         self.texture.mag_filter = 'nearest'
 
 
@@ -44,3 +45,11 @@ class Cursor(Widget):
 
     def on_cursor_enter(self, *args):
         self.opacity = 1
+
+    @property
+    def tool(self):
+        return self.cursor_img.tool
+
+    @tool.setter
+    def tool(self, value):
+        self.cursor_img.tool = value
