@@ -70,7 +70,8 @@ class ToolButton(ButtonBehavior, Image):
         self._normal = normal
         self._pressed = pressed
         self._hover = hover
-        super().__init__(source=normal, size_hint=(None, None))
+        super().__init__(source=normal, size_hint=(.1, .1))
+        self.allow_stretch = True
         self.texture.mag_filter = "nearest"
 
         Window.bind(mouse_pos=self._on_mouse_pos)

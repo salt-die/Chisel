@@ -49,15 +49,25 @@ class ChiselApp(App):
         navdrawer.bind(_anim_progress=self.disable_chisel)
 
         tools = tuple(ToolButton(normal, pressed, hover)
-                      for normal, pressed, hover in zip(TOOLS_NORMAL,
-                                                        TOOLS_PRESSED,
-                                                        TOOLS_HOVER))
-        def set_tool(i):
-            self.chisel.tool = i
-            self.cursor.tool = i
+            for normal, pressed, hover in zip(TOOLS_NORMAL, TOOLS_PRESSED, TOOLS_HOVER))
 
-        for i, tool in enumerate(tools):
-            tool.bind(on_release=lambda touch:set_tool(i))
+        def set_tool_0(touch):
+            self.chisel.tool = 0
+            self.cursor.tool = 0
+
+        def set_tool_1(touch):
+            self.chisel.tool = 1
+            self.cursor.tool = 1
+
+        def set_tool_2(touch):
+            self.chisel.tool = 2
+            self.cursor.tool = 2
+
+        funcs = set_tool_0, set_tool_1, set_tool_2
+
+        for i, (tool, on_release) in enumerate(zip(tools, funcs)):
+            tool.pos_hint = {"x": i * .1 + .4, "y": .05}
+            tool.bind(on_release=on_release)
 
         root.add_widget(navdrawer)
         root.add_widget(burger)
