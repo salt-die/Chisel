@@ -60,3 +60,35 @@ class BurgerButton(ButtonBehavior, Image):
             self.source = BURGER_PRESSED
         else:
             self._on_mouse_pos(override=True)
+
+class ToolButton(ButtonBehavior, Image):
+    """
+    Duplicated BurgerButton -- but we can pass in the source images and texture.mag_filter
+    will always be set to 'nearest'.
+    """
+    def __init__(self, normal, pressed, hover, *args, **kwargs):
+        self._normal = normal
+        self._pressed = pressed
+        self._hover = hover
+        super().__init__(source=normal, size_hint=(None, None))
+        self.texture.mag_filter = "nearest"
+
+        Window.bind(mouse_pos=self._on_mouse_pos)
+        self.bind(state=self._on_state, pos=self._on_mouse_pos)
+
+    def _on_mouse_pos(self, *args, override=False):
+        if self.state == "down" and not override:
+            return
+        if self.collide_point(*self.to_widget(*Window.mouse_pos)):
+            self.source = self._hover
+            self.texture.mag_filter = "nearest"
+        else:
+            self.source = self._normal
+            self.texture.mag_filter = "nearest"
+
+    def _on_state(self, *args):
+        if self.state == "down":
+            self.source = self._pressed
+            self.texture.mag_filter = "nearest"
+        else:
+            self._on_mouse_pos(override=True)
