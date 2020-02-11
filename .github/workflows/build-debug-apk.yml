@@ -22,8 +22,9 @@ jobs:
 
       - name: Build debug APK
         run: |
-          sudo chown $USER -R ~/.buildozer
           docker pull kivy/buildozer
+          docker run --volume "$HOME/.buildozer":/home/user/.buildozer --volume "$PWD":/home/user/hostcwd kivy/buildozer android debug
+          sudo chown $USER -R ~/.buildozer
           docker run --volume "$HOME/.buildozer":/home/user/.buildozer --volume "$PWD":/home/user/hostcwd kivy/buildozer android debug
 
       - name: Upload build artifact
