@@ -22,14 +22,12 @@ jobs:
 
       - name: Build debug APK
         run: |
+          mkdir ~/.buildozer
           docker pull kivy/buildozer
           docker run --volume "$HOME/.buildozer":/home/user/.buildozer --volume "$PWD":/home/user/hostcwd kivy/buildozer android debug
 
-      - name: Run mypy typing checks
-        run: |
-          mypy chisel main.py
-
-      - uses: actions/upload-artifact@v1
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v1
         with:
           name: Debug APK
           path: bin
