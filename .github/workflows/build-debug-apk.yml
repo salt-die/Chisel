@@ -22,7 +22,7 @@ jobs:
 
       - name: Build debug APK
         run: |
-          mkdir ~/.buildozer
+          sudo chown $USER -R ~/.buildozer
           docker pull kivy/buildozer
           docker run --volume "$HOME/.buildozer":/home/user/.buildozer --volume "$PWD":/home/user/hostcwd kivy/buildozer android debug
 
