@@ -35,8 +35,8 @@ jobs:
 
       - name: Run mypy typing checks
         run: |
-          mypy chisel main.py
+          mypy chisel
 
       - name: Run flake8 formatting checks
         run: |
-          flake8 chisel main.py
+          flake8 chisel
