@@ -155,12 +155,17 @@ class Chisel(Widget):
     def tool(self, i):
         self._tool = i
 
-    def poke_power(self, tx, ty, touch_velocity, pebble_x, pebble_y):
+    def poke_power(self, touch, pebble_x, pebble_y):
         """
         Returns the force vector of a poke.
         """
+        tx, ty = touch.spos
         dx, dy = pebble_x - tx, pebble_y - ty
-        distance = dx**2 + dy**2
+        distance = max(.001, dx**2 + dy**2)
+        
+        tdx, tdy = touch.dsx, touch.dsy
+        touch_velocity = tdx**2 + tdy**2
+        
 
         power = max(CHISEL_POWER * touch_velocity, MIN_POWER) / distance
         return power * dx, power * dy
@@ -176,19 +181,16 @@ class Chisel(Widget):
         x, y = int(x * w), int(y * h) # Coordinate of pixel in center of impact
         
         
-        
         #PIXEL SCREEN LOCATION:
         px, py = x * IMAGE_SCALE / w + X_OFFSET, y * IMAGE_SCALE / h + Y_OFFSET
         with self.canvas:
             pixel = Pixel(px, py, image[x, y, :] / 255)
         
-        tdx, tdy = touch.dsx, touch.dsy
-        touch_velocity = tdx**2 + tdy**2
-        velocity = self.poke_power(tx, ty, touch_velocity, px, py)
+        velocity = self.poke_power(touch, px, py)
         
         self.pebbles.append(Pebble(pixel, self, velocity))
 
-        view = image[y - R:y + R + 1, x - R:x + R + 1, :-1]
+        view = image[max(0, y - R):min(h -1, y + R + 1), max(0, x - R):min(w - 1, x + R + 1), :-1]
         image[y - R:y + R + 1, x - R:x + R + 1, :-1] = view * .8
         mask = view[:, :, :-1].sum(axis=2) < 100 # If color is sufficiently dark...
         image[y - R:y + R + 1, x - R:x + R + 1, -1][mask] = 0 # ...then set alpha to 0.
