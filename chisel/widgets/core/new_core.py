@@ -115,11 +115,10 @@ class Chisel(Widget):
         self._tool = 0  # 0, 1, or 2
         self.sounds = tuple(SoundLoader.load(sound) for sound in SOUND)
         self.setup_canvas()
-        self.resize_event = Clock.schedule_once(lambda dt: None, 0)
-        self.bind(size=self._delayed_resize, pos=self._delayed_resize)
+        self.bind(size=self.resize, pos=self.resize)
 
     def setup_canvas(self):
-        self.pebbles = []
+        self.pebbles = [] # Any falling pebbles will be destroyed.
 
         image = Image.open(choice(BOULDER_IMAGE_PATHS))
         image.thumbnail(IMAGE_DIM, Image.NEAREST)
@@ -140,10 +139,6 @@ class Chisel(Widget):
             self.background.texture.mag_filter = 'nearest'
 
             self.rect = Rectangle(texture=self.texture)
-
-    def _delayed_resize(self, *args):
-        self.resize_event.cancel()
-        self.resize_event = Clock.schedule_once(lambda dt: self.resize(*args), .3)
 
     def resize(self, *args):
         self.background.pos = self.pos
