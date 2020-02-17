@@ -1,4 +1,5 @@
 import io
+from itertools import product
 import json
 from pathlib import Path
 from random import choice
@@ -176,29 +177,27 @@ class Chisel(Widget):
         image = self.image
         h, w, _ = image.shape
         x, y = int(x * (w - 1)), int(y * (h - 1)) # Image coordinate of pixel in center of poke
-        #poke bounds; R is poke radius
-        x_l = max(0, x - R) # x left
-        x_r = min(w - 1, x + R + 1) # x right
-        y_u = max(0, y - R) # y up
-        y_d = min(h - 1, y + R + 1) # y down
+        # poke bounds; R is poke radius
+        l, r = max(0, x - R),  min(w - 1, x + R + 1) # left and right bounds
+        t, b = max(0, y - R),  min(h - 1, y + R + 1) # top and bottom bounds
         
-        #MOVE THIS TO ANOTHER METHOD
-        for x in range(x_l, x_r): #MAYBE USE PRODUCT
-            for y in range(y_u, y_d):
-                color = image[y, x, :]
-                if not color[-1]: # If color is transparent do nothing.
-                    continue
+        # Create pebbles around poke:
+        for x, y in product(range(l, r), range(t, b)):
+            color = image[y, x, :]
+            if not color[-1]: # If color is transparent do nothing.
+                continue
                 
-                px, py = x * IMAGE_SCALE / (w - 1) + X_OFFSET, y * IMAGE_SCALE / (h - 1) + Y_OFFSET
-                with self.canvas:
-                    pixel = Pixel(px, py, color / 255)
-                velocity = self.poke_power(touch, px, py)
-                self.pebbles.append(Pebble(pixel, self, velocity))
+            px, py = x * IMAGE_SCALE / (w - 1) + X_OFFSET, y * IMAGE_SCALE / (h - 1) + Y_OFFSET
+            with self.canvas:
+                pixel = Pixel(px, py, color / 255)
+            velocity = self.poke_power(touch, px, py)
+            self.pebbles.append(Pebble(pixel, self, velocity))
 
-        view = image[y_u:y_d, x_l:x_r, :-1]
-        image[y_u:y_d, x_l:x_r, :-1] = view * .8
+        # Darken poked area:
+        view = image[t:b, l:r, :-1]
+        image[t:b, l:r, :-1] = view * .8
         mask = view[:, :, :-1].sum(axis=2) < 100 # If color is sufficiently dark...
-        image[y_u:y_d, x_l:x_r, -1][mask] = 0 # ...then set alpha to 0.
+        image[t:b, l:r, -1][mask] = 0 # ...then set alpha to 0.
 
         self.texture.blit_buffer(image.tobytes(), colorfmt='rgba', bufferfmt='ubyte')
         self.canvas.ask_update()
