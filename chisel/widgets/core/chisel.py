@@ -30,12 +30,13 @@ BACKGROUND = str(Path("assets", "img", "background.png"))
 SOUND = (str(Path("assets", "sounds", f"00{i}.wav")) for i in range(1, 5))
 BOULDER_IMAGE_PATHS = tuple(Path("assets", "img", "boulder", f"{i}.png") for i in range(5))
 
+
 def perceived_brightness(colors):
     """Returns the perceived brightness of a color."""
-    normalized = colors / 255
-    linearized = np.where(normalized <= .04045, normalized/12.92, ((normalized + .055) / 1.055)**2.4)
+    normal = colors / 255
+    linearized = np.where(normal <= .04045, normal / 12.92, ((normal + .055) / 1.055)**2.4)
     luminance = linearized @ (.2126, .7152, .0722)
-    brightness = np.where(luminance <=.008856, luminance * 903.3, luminance**(1/3) * 116 - 16)
+    brightness = np.where(luminance <= .008856, luminance * 903.3, luminance**(1 / 3) * 116 - 16)
     return brightness
 
 
@@ -68,7 +69,7 @@ class Pebble:
         if not pixel.y:
             self.update.cancel()
             self.chisel.canvas.remove(pixel)
-            self.chisel.pebbles.remove(self) # Remove reference // kill this object
+            self.chisel.pebbles.remove(self)  # Remove reference // kill this object
 
 
 class Pixel(Rectangle):
@@ -81,7 +82,7 @@ class Pixel(Rectangle):
         self.chisel = chisel
         self.color = color = Color(*color)
         a = color.a
-        color.a = 0 # Initially not visible as size is not correct yet.
+        color.a = 0  # Initially not visible as size is not correct yet.
         super().__init__(*args, **kwargs)
         self.rescale()
         color.a = a
@@ -118,7 +119,7 @@ class Chisel(Widget):
             image = np.frombuffer(image.tobytes(), dtype=np.uint8)
             self.image = image.reshape((h, w, 4))[::-1, :, :].copy()
 
-            alpha_channel = self.image[:, :, -1] # Fix some slightly transparent pixels
+            alpha_channel = self.image[:, :, -1]  # Fix some slightly transparent pixels
             alpha_channel[alpha_channel > 127] = 255
         else:
             self.image = np.load(path_to_image)
@@ -129,7 +130,7 @@ class Chisel(Widget):
         self.texture.blit_buffer(self.image.tobytes(), colorfmt="rgba", bufferfmt="ubyte")
 
     def setup_canvas(self):
-        self.pebbles = [] # Any falling pebbles will be destroyed.
+        self.pebbles = []  # Any falling pebbles will be destroyed.
 
         with self.canvas:
             self.background_color = Color(1, 1, 1, 1)
@@ -176,10 +177,10 @@ class Chisel(Widget):
 
         image = self.image
         h, w, _ = image.shape
-        x, y = int(x * w), int(y * h) # Image coordinate of pixel in center of poke
+        x, y = int(x * w), int(y * h)  # Image coordinate of pixel in center of poke
         # poke bounds; R is poke radius
-        l, r = max(0, x - R),  min(w, x + R + 1) # left and right bounds
-        t, b = max(0, y - R),  min(h, y + R + 1) # top and bottom bounds
+        l, r = max(0, x - R), min(w, x + R + 1)  # left and right bounds
+        t, b = max(0, y - R), min(h, y + R + 1)  # top and bottom bounds
 
         # Create pebbles around poke and darken area:
         for x, y in product(range(l, r), range(t, b)):
@@ -217,7 +218,7 @@ class Chisel(Widget):
         self.setup_canvas()
 
     def save(self, path_to_file):
-        buffer = io.BytesIO() # Numpy will overwrite the extension unless we save to a buffer.
+        buffer = io.BytesIO()  # Numpy will overwrite the extension unless we save to a buffer.
         np.save(buffer, self.image, fix_imports=False)
 
         with open(path_to_file, "wb") as file:
