@@ -14,10 +14,8 @@ from kivy.uix.widget import Widget
 from kivy.graphics import Color, Rectangle
 from kivy.graphics.texture import Texture
 
-GRAVITY = .02
+GRAVITY = .01
 FRICTION = .9
-DISLODGE_VELOCITY = 1e-3
-MAX_VELOCITY = .2
 
 IMAGE_SCALE = .75
 SCALE_INVERSE = 1 / IMAGE_SCALE
@@ -35,20 +33,6 @@ SOUND = tuple(str(Path("/home/salt/Documents/Python/chisel/assets",
 
 BOULDER_IMAGE_PATHS = tuple(Path("/home/salt/Documents/Python/chisel/assets",
                                  "img", "boulder", f"{i}.png") for i in range(5))
-
-def is_dislodged(velocity):
-    """
-    Return False if velocity isn't enough to dislodge a pebble, else return the clipped
-    velocity vector.
-    """
-    x, y = velocity
-    magnitude = (x**2 + y**2)**.5
-    if magnitude < DISLODGE_VELOCITY:
-        return False
-    if magnitude > MAX_VELOCITY:
-        x *= MAX_VELOCITY / magnitude
-        y *= MAX_VELOCITY / magnitude
-    return x, y
 
 
 class Pebble:
