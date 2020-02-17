@@ -27,7 +27,7 @@ MIN_POWER = 1e-5
 CHISEL_POWER = 1e3
 
 BACKGROUND = str(Path("assets", "img", "background.png"))
-SOUND = tuple(str(Path("assets", "sounds", f"00{i}.wav")) for i in range(1, 5))
+SOUND = (str(Path("assets", "sounds", f"00{i}.wav")) for i in range(1, 5))
 BOULDER_IMAGE_PATHS = tuple(Path("assets", "img", "boulder", f"{i}.png") for i in range(5))
 
 def perceived_brightness(colors):
