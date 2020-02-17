@@ -138,6 +138,8 @@ class Chisel(Widget):
 
             self.boulder = Rectangle(texture=self.texture)
 
+        self.resize()
+
     def resize(self, *args):
         self.background.pos = self.pos
         self.background.size = self.size
