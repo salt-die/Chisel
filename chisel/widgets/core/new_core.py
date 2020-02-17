@@ -110,24 +110,30 @@ class Chisel(Widget):
         super().__init__(*args, **kwargs)
         self._tool = 0  # 0, 1, or 2
         self.sounds = tuple(SoundLoader.load(sound) for sound in SOUND)
+        self.load_boulder()
         self.setup_canvas()
         self.bind(size=self.resize, pos=self.resize)
 
-    def setup_canvas(self):
-        self.pebbles = [] # Any falling pebbles will be destroyed.
+    def load_boulder(self, path_to_image=None):
+        if path_to_image is None:
+            image = Image.open(choice(BOULDER_IMAGE_PATHS))
+            image.thumbnail(IMAGE_DIM, Image.NEAREST)
+            w, h = image.size
+            image = np.frombuffer(image.tobytes(), dtype=np.uint8)
+            self.image = image.reshape((h, w, 4))[::-1, :, :].copy()
 
-        image = Image.open(choice(BOULDER_IMAGE_PATHS))
-        image.thumbnail(IMAGE_DIM, Image.NEAREST)
-        w, h = image.size
-        image = np.frombuffer(image.tobytes(), dtype=np.uint8)
-        self.image = image.reshape((h, w, 4))[::-1, :, :].copy()
-
-        alpha_channel = self.image[:, :, -1] # Fix some slightly transparent pixels
-        alpha_channel[alpha_channel > 127] = 255
+            alpha_channel = self.image[:, :, -1] # Fix some slightly transparent pixels
+            alpha_channel[alpha_channel > 127] = 255
+        else:
+            self.image = np.load(path_to_image)
+            h, w, _ = self.image.shape
 
         self.texture = Texture.create(size=(w, h))
         self.texture.mag_filter = 'nearest'
         self.texture.blit_buffer(self.image.tobytes(), colorfmt='rgba', bufferfmt='ubyte')
+
+    def setup_canvas(self):
+        self.pebbles = [] # Any falling pebbles will be destroyed.
 
         with self.canvas:
             self.background_color = Color(1, 1, 1, 1)
@@ -205,6 +211,35 @@ class Chisel(Widget):
     def on_touch_move(self, touch):
         self.poke(touch)
         return True
+
+    def reset(self):
+        self.load_boulder()
+        self.canvas.clear()
+        self.setup_canvas()
+
+    def save(self, path_to_file):
+        buffer = io.BytesIO() # Numpy will overwrite the extension unless we save to a buffer.
+        np.save(buffer, self.image, fix_imports=False)
+
+        with open(path_to_file, 'w') as file:
+            file.write(buffer.getvalue())
+
+    def load(self, path_to_file):
+        self.load_boulder(path_to_file)
+        self.canvas.clear()
+        self.setup_canvas()
+
+    def export_png(self, path_to_file, transparent=False):
+        if transparent:
+            self.background_color.a = 0
+
+        buffer = io.BytesIO()  # Kivy hides filename errors, so we export to buffer first.
+        self.export_as_image().save(buffer, fmt="png")
+
+        with open(path_to_file, "wb") as file:
+            file.write(buffer.getvalue())
+
+        self.background_color.a = 1
 
 
 if __name__ == '__main__':
