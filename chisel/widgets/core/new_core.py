@@ -34,6 +34,14 @@ SOUND = tuple(str(Path("/home/salt/Documents/Python/chisel/assets",
 BOULDER_IMAGE_PATHS = tuple(Path("/home/salt/Documents/Python/chisel/assets",
                                  "img", "boulder", f"{i}.png") for i in range(5))
 
+def perceived_brightness(colors):
+    """Returns the perceived brightness of a color."""
+    normalized = colors / 255
+    linearized = np.where(normalized <= .04045, normalized/12.92, ((normalized + .055) / 1.055)**2.4)
+    luminance = linearized @ (.2126, .7152, .0722)
+    brightness = np.where(luminance <=.008856, luminance * 903.3, luminance**(1/3) * 116 - 16)
+    return brightness
+
 
 class Pebble:
     """
@@ -168,10 +176,10 @@ class Chisel(Widget):
         l, r = max(0, x - R),  min(w, x + R + 1) # left and right bounds
         t, b = max(0, y - R),  min(h, y + R + 1) # top and bottom bounds
 
-        # Create pebbles around poke:
+        # Create pebbles around poke and darken area:
         for x, y in product(range(l, r), range(t, b)):
             color = image[y, x, :]
-            if not color[-1]: # If color is transparent do nothing.
+            if not color[-1] or perceived_brightness(color[:-1]) < 30 * self._tool:
                 continue
 
             px, py = x * IMAGE_SCALE / w + X_OFFSET, y * IMAGE_SCALE / h + Y_OFFSET
@@ -180,11 +188,11 @@ class Chisel(Widget):
             velocity = self.poke_power(touch, px, py)
             self.pebbles.append(Pebble(pixel, self, velocity))
 
-        # Darken poked area:
-        view = image[t:b, l:r, :-1]
-        image[t:b, l:r, :-1] = view * .8
-        mask = view[:, :, :-1].sum(axis=2) < 100 # If color is sufficiently dark...
-        image[t:b, l:r, -1][mask] = 0 # ...then set alpha to 0.
+            darker = color[:-1] * .8
+            if perceived_brightness(darker) < 20:
+                image[y, x, -1] = 0
+            else:
+                image[y, x, :-1] = darker
 
         self.texture.blit_buffer(image.tobytes(), colorfmt='rgba', bufferfmt='ubyte')
         self.canvas.ask_update()
