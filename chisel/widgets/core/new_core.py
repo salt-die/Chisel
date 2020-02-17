@@ -30,7 +30,7 @@ MIN_POWER = 1e-5
 CHISEL_POWER = 1e3
 
 BACKGROUND = str(Path("/home/salt/Documents/Python/chisel/assets", "img", "background.png"))
-SOUND = tuple(str(Path("/home/salt/Documents/Python/chisel/assets", 
+SOUND = tuple(str(Path("/home/salt/Documents/Python/chisel/assets",
                        'sounds', f'00{i}.wav')) for i in range(1, 5))
 
 BOULDER_IMAGE_PATHS = tuple(Path("/home/salt/Documents/Python/chisel/assets",
@@ -102,7 +102,7 @@ class Pixel(Rectangle):
         self.color.a = self.a # Visible after rescale
         self.pos = self.x * screen_width, self.y * screen_height
         w, h = IMAGE_DIM
-        self.size = screen_width / (IMAGE_SCALE * w), screen_height / (IMAGE_SCALE * h)
+        self.size = (IMAGE_SCALE * screen_width) / w, (IMAGE_SCALE * screen_height) / h
 
 
 class Chisel(Widget):
@@ -161,16 +161,16 @@ class Chisel(Widget):
         tx, ty = touch.spos
         dx, dy = pebble_x - tx, pebble_y - ty
         distance = max(.001, dx**2 + dy**2)
-        
+
         tdx, tdy = touch.dsx, touch.dsy
         touch_velocity = tdx**2 + tdy**2
-        
+
         power = max(CHISEL_POWER * touch_velocity, MIN_POWER) / distance
         return power * dx, power * dy
 
     def poke(self, touch):
         tx, ty = touch.spos
-        x, y = SCALE_INVERSE * (tx - X_OFFSET), SCALE_INVERSE * (ty - Y_OFFSET) 
+        x, y = SCALE_INVERSE * (tx - X_OFFSET), SCALE_INVERSE * (ty - Y_OFFSET)
         if not (0 <= x <= 1 and 0 <= y <= 1):
             return
 
@@ -180,13 +180,13 @@ class Chisel(Widget):
         # poke bounds; R is poke radius
         l, r = max(0, x - R),  min(w - 1, x + R + 1) # left and right bounds
         t, b = max(0, y - R),  min(h - 1, y + R + 1) # top and bottom bounds
-        
+
         # Create pebbles around poke:
         for x, y in product(range(l, r), range(t, b)):
             color = image[y, x, :]
             if not color[-1]: # If color is transparent do nothing.
                 continue
-                
+
             px, py = x * IMAGE_SCALE / (w - 1) + X_OFFSET, y * IMAGE_SCALE / (h - 1) + Y_OFFSET
             with self.canvas:
                 pixel = Pixel(px, py, color / 255)
