@@ -177,26 +177,33 @@ class Chisel(Widget):
 
         image = self.image
         h, w, _ = image.shape
-        x, y = int(x * (w - 1)), int(y * (h - 1)) # Coordinate of pixel in center of impact
+        x, y = int(x * (w - 1)), int(y * (h - 1)) # Image coordinate of pixel in center of poke
+        #poke bounds; R is poke radius
+        x_l = max(0, x - R) # x left
+        x_r = min(w - 1, x + R + 1) # x right
+        y_u = max(0, y - R) # y up
+        y_d = min(h - 1, y + R + 1) # y down
         
-        #PIXEL SCREEN LOCATION:
-        px, py = x * IMAGE_SCALE / w + X_OFFSET, y * IMAGE_SCALE / h + Y_OFFSET
+        #MOVE THIS TO ANOTHER METHOD
         with self.canvas:
-            pixel = Pixel(px, py, image[y, x, :] / 255)
-        
-        velocity = self.poke_power(touch, px, py)
-        
-        self.pebbles.append(Pebble(pixel, self, velocity))
+            for x in range(x_l, x_r): #MAYBE USE PRODUCT
+                for y in range(y_u, y_d):
+                    color = image[y, x, :]
+                    if not color[-1]: # If color is transparent do nothing.
+                        continue
+                    
+                    px, py = x * IMAGE_SCALE / w + X_OFFSET, y * IMAGE_SCALE / h + Y_OFFSET
+                    pixel = Pixel(px, py, color / 255)
+                    velocity = self.poke_power(touch, px, py)
+                    self.pebbles.append(Pebble(pixel, self, velocity))
 
-        view = image[max(0, y - R):min(h -1, y + R + 1), max(0, x - R):min(w - 1, x + R + 1), :-1]
-        image[y - R:y + R + 1, x - R:x + R + 1, :-1] = view * .8
+        view = image[y_u:y_d, x_l:x_r, :-1]
+        image[y_u:y_d, x_l:x_r, :-1] = view * .8
         mask = view[:, :, :-1].sum(axis=2) < 100 # If color is sufficiently dark...
-        image[y - R:y + R + 1, x - R:x + R + 1, -1][mask] = 0 # ...then set alpha to 0.
+        image[y_u:y_d, x_l:x_r, -1][mask] = 0 # ...then set alpha to 0.
 
         self.texture.blit_buffer(image.tobytes(), colorfmt='rgba', bufferfmt='ubyte')
         self.canvas.ask_update()
-
-        
 
     def on_touch_down(self, touch):
         self.poke(touch)
