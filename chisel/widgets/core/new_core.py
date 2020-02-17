@@ -166,7 +166,6 @@ class Chisel(Widget):
         tdx, tdy = touch.dsx, touch.dsy
         touch_velocity = tdx**2 + tdy**2
         
-
         power = max(CHISEL_POWER * touch_velocity, MIN_POWER) / distance
         return power * dx, power * dy
 
@@ -178,8 +177,7 @@ class Chisel(Widget):
 
         image = self.image
         h, w, _ = image.shape
-        x, y = int(x * w), int(y * h) # Coordinate of pixel in center of impact
-        
+        x, y = int(x * (w - 1)), int(y * (h - 1)) # Coordinate of pixel in center of impact
         
         #PIXEL SCREEN LOCATION:
         px, py = x * IMAGE_SCALE / w + X_OFFSET, y * IMAGE_SCALE / h + Y_OFFSET
