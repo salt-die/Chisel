@@ -182,7 +182,7 @@ class Chisel(Widget):
         #PIXEL SCREEN LOCATION:
         px, py = x * IMAGE_SCALE / w + X_OFFSET, y * IMAGE_SCALE / h + Y_OFFSET
         with self.canvas:
-            pixel = Pixel(px, py, image[x, y, :] / 255)
+            pixel = Pixel(px, py, image[y, x, :] / 255)
         
         velocity = self.poke_power(touch, px, py)
         
