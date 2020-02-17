@@ -12,4 +12,4 @@ numpy
 Pillow
 
 --pre
---extra-index-url https://kivy.org/downloads/simple/
+#--extra-index-url https://kivy.org/downloads/simple/

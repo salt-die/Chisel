@@ -1,5 +1,5 @@
 import io
-import json
+from itertools import product
 from pathlib import Path
 from random import choice
 
@@ -11,89 +11,40 @@ from kivy.clock import Clock
 from kivy.core.audio import SoundLoader
 from kivy.uix.widget import Widget
 from kivy.graphics import Color, Rectangle
+from kivy.graphics.texture import Texture
 
-GRAVITY = .02
+GRAVITY = .01
 FRICTION = .9
-DISLODGE_VELOCITY = 1e-3
-MAX_VELOCITY = .2
 
-PEBBLE_COUNT = 7e3  # per layer.
-PEBBLE_IMAGE_SCALE = .75
+IMAGE_SCALE = .75
+SCALE_INVERSE = 1 / IMAGE_SCALE
+X_OFFSET = (1 - IMAGE_SCALE) / 2
+Y_OFFSET = .1
+IMAGE_DIM = 100, 100
 
-CHISEL_RADIUS = 6e-4
+RADIUS = R = 1
 MIN_POWER = 1e-5
-CHISEL_POWER = 100
+CHISEL_POWER = 1e3
 
-BACKGROUND = str(Path('assets', 'img', 'background.png'))
-SOUND = tuple(str(Path('assets', 'sounds', f'00{i}.wav')) for i in range(1, 5))
+BACKGROUND = str(Path("assets", "img", "background.png"))
+SOUND = tuple(str(Path("assets", "sounds", f"00{i}.wav")) for i in range(1, 5))
+BOULDER_IMAGE_PATHS = tuple(Path("assets", "img", "boulder", f"{i}.png") for i in range(5))
 
-
-def get_image_and_aspect(file):
-    """
-    Returns image and the correct ratio of pebbles per row and column from PEBBLE_COUNT and
-    image height and width.
-    """
-    with Image.open(file) as image:
-        w, h = image.size
-        image = np.frombuffer(image.tobytes(), dtype=np.uint8)
-    image = image.reshape((h, w, 4))
-
-    pebbles_per_row = (PEBBLE_COUNT * w / h)**.5
-    pebbles_per_column = pebbles_per_row * h / w
-
-    return image, int(pebbles_per_row), int(pebbles_per_column)
-
-
-PEBBLE_IMAGE_PATHS = (Path("assets", "img", "boulder", f"{i}.png") for i in range(5))
-PEBBLE_IMAGES = tuple(get_image_and_aspect(image) for image in PEBBLE_IMAGE_PATHS)
-CURRENT_IMAGE = list(choice(PEBBLE_IMAGES))
-
-
-def pebble_setup():
-    """
-    Determines initial pebble color and placement from an image's non-transparent pixels.
-    """
-    image, pebbles_per_row, pebbles_per_column = CURRENT_IMAGE
-    x_scale, y_scale = 1 / pebbles_per_row, 1 / pebbles_per_column
-    x_offset, y_offset = (1 - PEBBLE_IMAGE_SCALE) / 2, .1  # Lower-left corner offset of image.
-    h, w, _ = image.shape
-
-    for x in range(pebbles_per_row):
-        x = x_scale * x
-        for y in range(pebbles_per_column):
-            y = y_scale * y
-            sample_loc = int(y * h), int(x * w)
-            r, g, b, a = image[sample_loc]
-            if not a:
-                continue
-            pebble_x = x * PEBBLE_IMAGE_SCALE + x_offset
-            pebble_y = (1 - y) * PEBBLE_IMAGE_SCALE + y_offset
-            normalized_color = r / 255, g / 255, b / 255, a / 255
-            yield pebble_x, pebble_y, normalized_color
-
-
-def is_dislodged(velocity):
-    """
-    Return False if velocity isn't enough to dislodge a pebble, else return the clipped
-    velocity vector.
-    """
-    x, y = velocity
-    magnitude = (x**2 + y**2)**.5
-    if magnitude < DISLODGE_VELOCITY:
-        return False
-    if magnitude > MAX_VELOCITY:
-        x *= MAX_VELOCITY / magnitude
-        y *= MAX_VELOCITY / magnitude
-    return x, y
+def perceived_brightness(colors):
+    """Returns the perceived brightness of a color."""
+    normalized = colors / 255
+    linearized = np.where(normalized <= .04045, normalized/12.92, ((normalized + .055) / 1.055)**2.4)
+    luminance = linearized @ (.2126, .7152, .0722)
+    brightness = np.where(luminance <=.008856, luminance * 903.3, luminance**(1/3) * 116 - 16)
+    return brightness
 
 
 class Pebble:
     """
-    This handles physics for dislodged pebbles. Deletes itself after pebbles reach the floor.
+    Simple gravity physics for pebbles. Deletes itself after pebbles reach the floor.
     """
 
-    def __init__(self, index, pixel, chisel, velocity):
-        self.index = index
+    def __init__(self, pixel, chisel, velocity):
         self.pixel = pixel
         self.chisel = chisel
         self.velocity = velocity
@@ -101,7 +52,8 @@ class Pebble:
 
     def step(self, dt):
         """Gravity Physics"""
-        x, y = self.pixel.x, self.pixel.y
+        pixel = self.pixel
+        x, y = pixel.x, pixel.y
         vx, vy = self.velocity
         vx *= FRICTION
         vy *= FRICTION
@@ -111,13 +63,12 @@ class Pebble:
             vx *= -1
 
         self.velocity = vx, vy
-        self.pixel.x, self.pixel.y = x + vx, max(0, y + vy)
-        chisel = self.chisel
-        self.pixel.rescale(chisel.width, chisel.height)
+        pixel.update_pos(x + vx, max(0, y + vy))
 
-        if not self.pixel.y:
+        if not pixel.y:
             self.update.cancel()
-            del chisel.pebbles[self.index]  # Remove reference // kill this object
+            self.chisel.canvas.remove(pixel)
+            self.chisel.pebbles.remove(self) # Remove reference // kill this object
 
 
 class Pixel(Rectangle):
@@ -125,16 +76,25 @@ class Pixel(Rectangle):
     Kivy Rectangle with unscaled coordinates (x, y) and color information.
     """
 
-    def __init__(self, x, y, z, screen_width, screen_height, color, *args, **kwargs):
-        self.x = x
-        self.y = y
-        self.z = z
-        self.color = Color(*color)
+    def __init__(self, x, y, chisel, color, *args, **kwargs):
+        self.x, self.y = x, y
+        self.chisel = chisel
+        self.color = color = Color(*color)
+        a = color.a
+        color.a = 0 # Initially not visible as size is not correct yet.
         super().__init__(*args, **kwargs)
-        self.rescale(screen_width, screen_height)
+        self.rescale()
+        color.a = a
 
-    def rescale(self, screen_width, screen_height):
-        self.pos = self.x * screen_width, self.y * screen_height
+    def update_pos(self, x, y):
+        self.x, self.y = x, y
+        self.pos = x * self.chisel.width, y * self.chisel.height
+
+    def rescale(self):
+        chisel = self.chisel
+        screen_w, screen_h = chisel.width, chisel.height
+        image_h, image_w, _ = chisel.image.shape
+        self.size = (IMAGE_SCALE * screen_w) / image_w, (IMAGE_SCALE * screen_h) / image_h
 
 
 class Chisel(Widget):
@@ -146,87 +106,98 @@ class Chisel(Widget):
         super().__init__(*args, **kwargs)
         self._tool = 0  # 0, 1, or 2
         self.sounds = tuple(SoundLoader.load(sound) for sound in SOUND)
+        self.load_boulder()
         self.setup_canvas()
-        self.resize_event = Clock.schedule_once(lambda dt: None, 0)
-        self.bind(size=self._delayed_resize, pos=self._delayed_resize)
+        self.bind(size=self.resize, pos=self.resize)
 
-    def get_pebble_size(self):
-        """Calculate the correct pebble size so we have no gaps in our stone."""
-        scaled_w = PEBBLE_IMAGE_SCALE * self.width
-        scaled_h = PEBBLE_IMAGE_SCALE * self.height
-        _, pebbles_per_row, pebbles_per_column = CURRENT_IMAGE
-        return scaled_w / pebbles_per_row, scaled_h / pebbles_per_column
+    def load_boulder(self, path_to_image=None):
+        if path_to_image is None:
+            image = Image.open(choice(BOULDER_IMAGE_PATHS))
+            image.thumbnail(IMAGE_DIM, Image.NEAREST)
+            w, h = image.size
+            image = np.frombuffer(image.tobytes(), dtype=np.uint8)
+            self.image = image.reshape((h, w, 4))[::-1, :, :].copy()
+
+            alpha_channel = self.image[:, :, -1] # Fix some slightly transparent pixels
+            alpha_channel[alpha_channel > 127] = 255
+        else:
+            self.image = np.load(path_to_image)
+            h, w, _ = self.image.shape
+
+        self.texture = Texture.create(size=(w, h))
+        self.texture.mag_filter = "nearest"
+        self.texture.blit_buffer(self.image.tobytes(), colorfmt="rgba", bufferfmt="ubyte")
 
     def setup_canvas(self):
-        self.pebbles = {}
-        self.pixels = []
-
-        w, h = self.width, self.height
-        self.pebble_size = size = self.get_pebble_size()
+        self.pebbles = [] # Any falling pebbles will be destroyed.
 
         with self.canvas:
             self.background_color = Color(1, 1, 1, 1)
-            self.background = Rectangle(pos=self.pos, size=self.size, source=BACKGROUND)
-            self.background.texture.mag_filter = 'nearest'
+            self.background = Rectangle(source=BACKGROUND)
+            self.background.texture.mag_filter = "nearest"
 
-            for z, color_scale in enumerate((.4, .6, 1)):  # The different layers of stone.
-                for x, y, (r, g, b, a) in pebble_setup():
-                    color = color_scale * r, color_scale * g, color_scale * b, a
-                    self.pixels.append(Pixel(x, y, z, w, h, color, size=size))
-
-    def _delayed_resize(self, *args):
-        self.resize_event.cancel()
-        self.resize_event = Clock.schedule_once(lambda dt: self.resize(*args), .3)
+            self.boulder = Rectangle(texture=self.texture)
 
     def resize(self, *args):
         self.background.pos = self.pos
         self.background.size = self.size
 
-        self.pebble_size = size = self.get_pebble_size()
-        for pixel in self.pixels:
-            pixel.rescale(self.width, self.height)
-            pixel.size = size
+        self.boulder.size = IMAGE_SCALE * self.width, IMAGE_SCALE * self.height
+        self.boulder.pos = self.width * X_OFFSET, self.height * Y_OFFSET
+
+        for pebble in self.pebbles:
+            pebble.pixel.rescale()
 
     def tool(self, i):
         self._tool = i
 
-    def poke_power(self, tx, ty, touch_velocity, pebble_x, pebble_y):
+    def poke_power(self, touch, pixel_x, pixel_y):
         """
         Returns the force vector of a poke.
         """
-        dx, dy = pebble_x - tx, pebble_y - ty
-        distance = dx**2 + dy**2
+        tx, ty = touch.spos
+        dx, dy = pixel_x - tx, pixel_y - ty
+        distance = max(.001, dx**2 + dy**2)
 
-        if distance > CHISEL_RADIUS:
-            return 0, 0
-        if not distance:
-            distance = 1e-4
+        tdx, tdy = touch.dsx, touch.dsy
+        touch_velocity = tdx**2 + tdy**2
 
         power = max(CHISEL_POWER * touch_velocity, MIN_POWER) / distance
         return power * dx, power * dy
 
     def poke(self, touch):
-        """
-        Apply a poke to each pixel ignoring pixels that are below other pixels.
-        """
         tx, ty = touch.spos
-        tdx, tdy = touch.dsx, touch.dsy
-        touch_velocity = tdx**2 + tdy**2
-        dislodged = {}
+        x, y = SCALE_INVERSE * (tx - X_OFFSET), SCALE_INVERSE * (ty - Y_OFFSET)
+        if not (0 <= x <= 1 and 0 <= y <= 1):
+            return
 
-        for i, pixel in enumerate(self.pixels):
-            x, y, z = pixel.x, pixel.y, pixel.z
+        image = self.image
+        h, w, _ = image.shape
+        x, y = int(x * w), int(y * h) # Image coordinate of pixel in center of poke
+        # poke bounds; R is poke radius
+        l, r = max(0, x - R),  min(w, x + R + 1) # left and right bounds
+        t, b = max(0, y - R),  min(h, y + R + 1) # top and bottom bounds
 
-            if z < self._tool:  # Current tool can't chisel this depth.
+        # Create pebbles around poke and darken area:
+        for x, y in product(range(l, r), range(t, b)):
+            color = image[y, x, :]
+            if not color[-1] or perceived_brightness(color[:-1]) < 30 * self._tool:
                 continue
 
-            velocity = is_dislodged(self.poke_power(tx, ty, touch_velocity, x, y))
-            pixel_depth, *_ = dislodged.get((x, y), (-1,))
-            if velocity and pixel_depth < z:
-                dislodged[x, y] = z, i, pixel, velocity
+            px, py = x * IMAGE_SCALE / w + X_OFFSET, y * IMAGE_SCALE / h + Y_OFFSET
+            with self.canvas:
+                pixel = Pixel(px, py, self, color / 255)
+            velocity = self.poke_power(touch, px, py)
+            self.pebbles.append(Pebble(pixel, self, velocity))
 
-        for _, i, pixel, velocity in dislodged.values():
-            self.pebbles[i] = Pebble(i, pixel, self, velocity)
+            darker = color[:-1] * .8
+            if perceived_brightness(darker) < 20:
+                image[y, x, -1] = 0
+            else:
+                image[y, x, :-1] = darker
+
+        self.texture.blit_buffer(image.tobytes(), colorfmt="rgba", bufferfmt="ubyte")
+        self.canvas.ask_update()
 
     def on_touch_down(self, touch):
         self.poke(touch)
@@ -238,53 +209,23 @@ class Chisel(Widget):
         return True
 
     def reset(self):
-        CURRENT_IMAGE[:] = list(choice(PEBBLE_IMAGES))
+        self.load_boulder()
         self.canvas.clear()
         self.setup_canvas()
 
     def save(self, path_to_file):
-        _, pebbles_per_row, pebbles_per_column = CURRENT_IMAGE
-        positions = []
-        colors = []
-        for pixel in self.pixels:
-            if pixel.y:
-                positions.append((pixel.x, pixel.y, pixel.z))
-                colors.append(pixel.color.rgba)
+        buffer = io.BytesIO() # Numpy will overwrite the extension unless we save to a buffer.
+        np.save(buffer, self.image, fix_imports=False)
 
-        pebble_dict = {'positions': positions,
-                       'colors': colors,
-                       'aspect': (pebbles_per_row, pebbles_per_column)}
-
-        with open(path_to_file, 'w') as file:
-            json.dump(pebble_dict, file)
+        with open(path_to_file, "wb") as file:
+            file.write(buffer.getvalue())
 
     def load(self, path_to_file):
-        with open(path_to_file, 'r') as file:
-            pebble_dict = json.load(file)
-
-        CURRENT_IMAGE[1:] = pebble_dict['aspect']
-
-        self.pebbles = {}
-        self.pixels = []
-
-        w, h = self.width, self.height
-        self.pebble_size = size = self.get_pebble_size()
-
+        self.load_boulder(path_to_file)
         self.canvas.clear()
-        with self.canvas:
-            self.background_color = Color(1, 1, 1, 1)
-            self.background = Rectangle(pos=self.pos, size=self.size, source=BACKGROUND)
-            self.background.texture.mag_filter = 'nearest'
-
-            for pos, color in zip(pebble_dict['positions'], pebble_dict['colors']):
-                self.pixels.append(Pixel(*pos, w, h, color, size=size))
+        self.setup_canvas()
 
     def export_png(self, path_to_file, transparent=False):
-        transparent_pixels = []  # We won't save pebbles on the floor.
-        for pixel in self.pixels:
-            if not pixel.y:
-                transparent_pixels.append((pixel, pixel.color.a))
-                pixel.color.a = 0
         if transparent:
             self.background_color.a = 0
 
@@ -294,12 +235,10 @@ class Chisel(Widget):
         with open(path_to_file, "wb") as file:
             file.write(buffer.getvalue())
 
-        for pixel, alpha in transparent_pixels:
-            pixel.color.a = alpha
         self.background_color.a = 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     class ChiselApp(App):
         def build(self):
             return Chisel()
