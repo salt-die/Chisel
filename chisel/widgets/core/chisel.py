@@ -105,7 +105,7 @@ class Chisel(Widget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._tool = 0  # 0, 1, or 2
-        self.sounds = tuple(SoundLoader.load(sound) for sound in SOUND)
+        self.sounds = tuple(map(SoundLoader.load, SOUND))
         self.load_boulder()
         self.setup_canvas()
         self.bind(size=self.resize, pos=self.resize)
