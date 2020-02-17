@@ -63,7 +63,8 @@ class Pebble:
 
     def step(self, dt):
         """Gravity Physics"""
-        x, y = self.pixel.x, self.pixel.y
+        pixel = self.pixel
+        x, y = pixel.x, pixel.y
         vx, vy = self.velocity
         vx *= FRICTION
         vy *= FRICTION
@@ -73,12 +74,13 @@ class Pebble:
             vx *= -1
 
         self.velocity = vx, vy
-        self.pixel.x, self.pixel.y = x + vx, max(0, y + vy)
+        pixel.x, pixel.y = x + vx, max(0, y + vy)
         chisel = self.chisel
-        self.pixel.rescale(chisel.width, chisel.height)
+        pixel.rescale(chisel.width, chisel.height)
 
-        if not self.pixel.y:
+        if not pixel.y:
             self.update.cancel()
+            chisel.canvas.remove(pixel)
             chisel.pebbles.remove(self) # Remove reference // kill this object
 
 
@@ -191,7 +193,6 @@ class Chisel(Widget):
                 with self.canvas:
                     pixel = Pixel(px, py, color / 255)
                 velocity = self.poke_power(touch, px, py)
-                print(velocity)
                 self.pebbles.append(Pebble(pixel, self, velocity))
 
         view = image[y_u:y_d, x_l:x_r, :-1]
