@@ -37,7 +37,7 @@ BOULDER_IMAGE_PATHS = tuple(Path("/home/salt/Documents/Python/chisel/assets",
 
 class Pebble:
     """
-    This handles physics for dislodged pebbles. Deletes itself after pebbles reach the floor.
+    Simple gravity physics for pebbles. Deletes itself after pebbles reach the floor.
     """
 
     def __init__(self, pixel, chisel, velocity):
@@ -59,14 +59,12 @@ class Pebble:
             vx *= -1
 
         self.velocity = vx, vy
-        pixel.x, pixel.y = x + vx, max(0, y + vy)
-        chisel = self.chisel
-        pixel.rescale(chisel.width, chisel.height)
+        pixel.update_pos(x + vx, max(0, y + vy))
 
         if not pixel.y:
             self.update.cancel()
-            chisel.canvas.remove(pixel)
-            chisel.pebbles.remove(self) # Remove reference // kill this object
+            self.chisel.canvas.remove(pixel)
+            self.chisel.pebbles.remove(self) # Remove reference // kill this object
 
 
 class Pixel(Rectangle):
@@ -74,19 +72,25 @@ class Pixel(Rectangle):
     Kivy Rectangle with unscaled coordinates (x, y) and color information.
     """
 
-    def __init__(self, x, y, color, *args, **kwargs):
-        self.x = x
-        self.y = y
-        self.color = Color(*color)
-        self.a = self.color.a
-        self.color.a = 0 # Initially not visible as size is not correct yet.
+    def __init__(self, x, y, chisel, color, *args, **kwargs):
+        self.x, self.y = x, y
+        self.chisel = chisel
+        self.color = color = Color(*color)
+        a = color.a
+        color.a = 0 # Initially not visible as size is not correct yet.
         super().__init__(*args, **kwargs)
+        self.rescale()
+        color.a = a
 
-    def rescale(self, screen_width, screen_height):
-        self.color.a = self.a # Visible after rescale
-        self.pos = self.x * screen_width, self.y * screen_height
-        w, h = IMAGE_DIM
-        self.size = (IMAGE_SCALE * screen_width) / w, (IMAGE_SCALE * screen_height) / h
+    def update_pos(self, x, y):
+        self.x, self.y = x, y
+        self.pos = x * self.chisel.width, y * self.chisel.height
+
+    def rescale(self):
+        chisel = self.chisel
+        screen_w, screen_h = chisel.width, chisel.height
+        image_h, image_w, _ = chisel.image.shape
+        self.size = (IMAGE_SCALE * screen_w) / image_w, (IMAGE_SCALE * screen_h) / image_h
 
 
 class Chisel(Widget):
@@ -122,23 +126,27 @@ class Chisel(Widget):
             self.background = Rectangle(source=BACKGROUND)
             self.background.texture.mag_filter = 'nearest'
 
-            self.rect = Rectangle(texture=self.texture)
+            self.boulder = Rectangle(texture=self.texture)
 
     def resize(self, *args):
         self.background.pos = self.pos
         self.background.size = self.size
-        self.rect.size = IMAGE_SCALE * self.width, IMAGE_SCALE * self.height
-        self.rect.pos = self.width * X_OFFSET, self.height * Y_OFFSET
+
+        self.boulder.size = IMAGE_SCALE * self.width, IMAGE_SCALE * self.height
+        self.boulder.pos = self.width * X_OFFSET, self.height * Y_OFFSET
+
+        for pebble in self.pebbles:
+            pebble.pixel.rescale()
 
     def tool(self, i):
         self._tool = i
 
-    def poke_power(self, touch, pebble_x, pebble_y):
+    def poke_power(self, touch, pixel_x, pixel_y):
         """
         Returns the force vector of a poke.
         """
         tx, ty = touch.spos
-        dx, dy = pebble_x - tx, pebble_y - ty
+        dx, dy = pixel_x - tx, pixel_y - ty
         distance = max(.001, dx**2 + dy**2)
 
         tdx, tdy = touch.dsx, touch.dsy
@@ -168,7 +176,7 @@ class Chisel(Widget):
 
             px, py = x * IMAGE_SCALE / w + X_OFFSET, y * IMAGE_SCALE / h + Y_OFFSET
             with self.canvas:
-                pixel = Pixel(px, py, color / 255)
+                pixel = Pixel(px, py, self, color / 255)
             velocity = self.poke_power(touch, px, py)
             self.pebbles.append(Pebble(pixel, self, velocity))
 
