@@ -25,12 +25,8 @@ Y_OFFSET = .1
 IMAGE_DIM = 100, 100
 
 RADIUS = R = 1
-CHISEL_SHAPE = np.array([[0, 1, 0],
-                         [1, 1, 1],
-                         [0, 1, 0]]).astype(bool)
-CHISEL_STACK = np.dstack([CHISEL_SHAPE] * 3)
 MIN_POWER = 1e-5
-CHISEL_POWER = 100
+CHISEL_POWER = 1e3
 
 BACKGROUND = str(Path("/home/salt/Documents/Python/chisel/assets", "img", "background.png"))
 SOUND = tuple(str(Path("/home/salt/Documents/Python/chisel/assets", 
@@ -185,17 +181,18 @@ class Chisel(Widget):
         y_d = min(h - 1, y + R + 1) # y down
         
         #MOVE THIS TO ANOTHER METHOD
-        with self.canvas:
-            for x in range(x_l, x_r): #MAYBE USE PRODUCT
-                for y in range(y_u, y_d):
-                    color = image[y, x, :]
-                    if not color[-1]: # If color is transparent do nothing.
-                        continue
-                    
-                    px, py = x * IMAGE_SCALE / w + X_OFFSET, y * IMAGE_SCALE / h + Y_OFFSET
+        for x in range(x_l, x_r): #MAYBE USE PRODUCT
+            for y in range(y_u, y_d):
+                color = image[y, x, :]
+                if not color[-1]: # If color is transparent do nothing.
+                    continue
+                
+                px, py = x * IMAGE_SCALE / (w - 1) + X_OFFSET, y * IMAGE_SCALE / (h - 1) + Y_OFFSET
+                with self.canvas:
                     pixel = Pixel(px, py, color / 255)
-                    velocity = self.poke_power(touch, px, py)
-                    self.pebbles.append(Pebble(pixel, self, velocity))
+                velocity = self.poke_power(touch, px, py)
+                print(velocity)
+                self.pebbles.append(Pebble(pixel, self, velocity))
 
         view = image[y_u:y_d, x_l:x_r, :-1]
         image[y_u:y_d, x_l:x_r, :-1] = view * .8
