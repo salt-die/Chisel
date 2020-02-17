@@ -118,9 +118,6 @@ class Chisel(Widget):
         self.resize_event = Clock.schedule_once(lambda dt: None, 0)
         self.bind(size=self._delayed_resize, pos=self._delayed_resize)
 
-    def get_pebble_size(self):
-        pass
-
     def setup_canvas(self):
         self.pebbles = []
 
@@ -129,7 +126,9 @@ class Chisel(Widget):
         w, h = image.size
         image = np.frombuffer(image.tobytes(), dtype=np.uint8)
         self.image = image.reshape((h, w, 4))[::-1, :, :].copy()
-        #self.image[:, :, -1] = np.where(self.image[:, :, -1] > .5, 1, self.image[:, :, -1])
+
+        alpha_channel = self.image[:, :, -1] # Fix some slightly transparent pixels
+        alpha_channel[alpha_channel > 127] = 255
 
         self.texture = Texture.create(size=(w, h))
         self.texture.mag_filter = 'nearest'
