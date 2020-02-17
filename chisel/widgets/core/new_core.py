@@ -165,8 +165,8 @@ class Chisel(Widget):
         h, w, _ = image.shape
         x, y = int(x * w), int(y * h) # Image coordinate of pixel in center of poke
         # poke bounds; R is poke radius
-        l, r = max(0, x - R),  min(w - 1, x + R + 1) # left and right bounds
-        t, b = max(0, y - R),  min(h - 1, y + R + 1) # top and bottom bounds
+        l, r = max(0, x - R),  min(w, x + R + 1) # left and right bounds
+        t, b = max(0, y - R),  min(h, y + R + 1) # top and bottom bounds
 
         # Create pebbles around poke:
         for x, y in product(range(l, r), range(t, b)):
@@ -197,6 +197,7 @@ class Chisel(Widget):
     def on_touch_move(self, touch):
         self.poke(touch)
         return True
+
 
 if __name__ == '__main__':
     class ChiselApp(App):
