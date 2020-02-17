@@ -136,6 +136,7 @@ class Chisel(Widget):
             self.background = Rectangle(source=BACKGROUND)
             self.background.texture.mag_filter = "nearest"
 
+            Color(1, 1, 1, 1)
             self.boulder = Rectangle(texture=self.texture)
 
         self.resize()
