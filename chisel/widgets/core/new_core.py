@@ -129,6 +129,7 @@ class Chisel(Widget):
         w, h = image.size
         image = np.frombuffer(image.tobytes(), dtype=np.uint8)
         self.image = image.reshape((h, w, 4))[::-1, :, :].copy()
+        #self.image[:, :, -1] = np.where(self.image[:, :, -1] > .5, 1, self.image[:, :, -1])
 
         self.texture = Texture.create(size=(w, h))
         self.texture.mag_filter = 'nearest'
@@ -176,7 +177,7 @@ class Chisel(Widget):
 
         image = self.image
         h, w, _ = image.shape
-        x, y = int(x * (w - 1)), int(y * (h - 1)) # Image coordinate of pixel in center of poke
+        x, y = int(x * w), int(y * h) # Image coordinate of pixel in center of poke
         # poke bounds; R is poke radius
         l, r = max(0, x - R),  min(w - 1, x + R + 1) # left and right bounds
         t, b = max(0, y - R),  min(h - 1, y + R + 1) # top and bottom bounds
@@ -187,7 +188,7 @@ class Chisel(Widget):
             if not color[-1]: # If color is transparent do nothing.
                 continue
 
-            px, py = x * IMAGE_SCALE / (w - 1) + X_OFFSET, y * IMAGE_SCALE / (h - 1) + Y_OFFSET
+            px, py = x * IMAGE_SCALE / w + X_OFFSET, y * IMAGE_SCALE / h + Y_OFFSET
             with self.canvas:
                 pixel = Pixel(px, py, color / 255)
             velocity = self.poke_power(touch, px, py)
