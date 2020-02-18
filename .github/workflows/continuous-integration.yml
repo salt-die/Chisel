@@ -1,10 +1,10 @@
 on:
   push:
     branches:
-      - master
+      - android
   pull_request:
     branches:
-      - master
+      - android
 name: Continuous Integration
 jobs:
   main:
