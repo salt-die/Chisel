@@ -106,7 +106,7 @@ class Chisel(Widget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._tool = 0  # 0, 1, or 2
-        self.touched = False
+        self.touched = self.disabled = False
         self.sounds = tuple(map(SoundLoader.load, SOUND))
         self.load_boulder()
         self.setup_canvas()
@@ -207,15 +207,21 @@ class Chisel(Widget):
         self.canvas.ask_update()
 
     def on_touch_down(self, touch):
+        if self.disabled:
+            return
+
         self.poke(touch)
         choice(self.sounds).play()
         return True
 
     def on_touch_move(self, touch):
+        if self.disabled:
+            return
+
         if not self.touched:
             self.touched = True
             self.poke(touch)
-            Clock.schedule_once(self.untouch,1/24) # Limit how quickly dragging mouse chisels stone.
+            Clock.schedule_once(self.untouch,1/24) # Limit how quickly touch_move chisels away stone.
         return True
 
     def untouch(self, dt):

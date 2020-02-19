@@ -30,11 +30,9 @@ class ChiselApp(App):
         navdrawer.toggle_state()
         navdrawer.anim_type = "slide_above_anim"
 
-        self.chisel = chisel = Chisel()
-        self.chisel_on_touch_down = chisel.on_touch_down
-        self.chisel_on_touch_move = chisel.on_touch_move
+        self.chisel = Chisel()
 
-        options_panel = OptionsPanel(chisel)
+        options_panel = OptionsPanel(self.chisel)
         navdrawer.add_widget(options_panel)
 
         burger = BurgerButton()
@@ -70,10 +68,7 @@ class ChiselApp(App):
         instance.side_panel.opacity = 1 if instance._anim_progress else 0
 
     def disable_chisel(self, instance, value):
-        if instance._anim_progress > 0:
-            self.chisel.disable()
-        else:
-            self.chisel.enable()
+        self.chisel.disabled = bool(instance._anim_progress)
 
 
 if __name__ == "__main__":
