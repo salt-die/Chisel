@@ -16,8 +16,8 @@ from .widgets import BurgerButton, Chisel, Cursor, OptionsPanel, ToolButton
 
 IMAGE_PATH = Path("assets", "img")
 ICON = str(IMAGE_PATH / "icon.png")
-TOOLS_NORMAL = tuple(str(IMAGE_PATH / "cursor" / f"up_{i}.png") for i in range(3))
-TOOLS_PRESSED = tuple(str(IMAGE_PATH / "cursor" / f"selected_{i}.png") for i in range(3))
+TOOLS_NORMAL = (str(IMAGE_PATH / "cursor" / f"up_{i}.png") for i in range(3))
+TOOLS_SELECTED = (str(IMAGE_PATH / "cursor" / f"selected_{i}.png") for i in range(3))
 
 
 class ChiselApp(App):
@@ -43,12 +43,12 @@ class ChiselApp(App):
         rel_layout = RelativeLayout()  # This layout allows navdrawer to push contained widgets.
         rel_layout.add_widget(chisel)
 
-        tools = (ToolButton(*sources) for sources in zip(TOOLS_NORMAL, TOOLS_PRESSED))
+        tools = (ToolButton(*sources) for sources in zip(TOOLS_NORMAL, TOOLS_SELECTED))
         funcs = (lambda touch: (self.chisel.tool(0), self.cursor.tool(0)),
                  lambda touch: (self.chisel.tool(1), self.cursor.tool(1)),
                  lambda touch: (self.chisel.tool(2), self.cursor.tool(2)))
         for i, (tool, func) in enumerate(zip(tools, funcs)):
-            tool.pos_hint = {"x": i * .1 + .4, "y": .01}
+            tool.pos_hint = {"x": i * .1 + .35, "y": .01}
             tool.bind(on_press=func)
             if not i:  # First tool button is selected.
                 tool.state = "down"
@@ -71,10 +71,9 @@ class ChiselApp(App):
 
     def disable_chisel(self, instance, value):
         if instance._anim_progress > 0:
-            self.chisel.on_touch_down = self.chisel.on_touch_move = lambda *args: None
+            self.chisel.disable()
         else:
-            self.chisel.on_touch_down = self.chisel_on_touch_down
-            self.chisel.on_touch_move = self.chisel_on_touch_move
+            self.chisel.enable()
 
 
 if __name__ == "__main__":
