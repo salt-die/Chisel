@@ -30,7 +30,7 @@ class ChiselApp(App):
         navdrawer.toggle_state()
         navdrawer.anim_type = "slide_above_anim"
 
-        self.chisel = chisel = Chisel()
+        chisel = Chisel()
 
         options_panel = OptionsPanel(chisel)
         navdrawer.add_widget(options_panel)
@@ -55,20 +55,16 @@ class ChiselApp(App):
         navdrawer.add_widget(rel_layout)
         options_panel.build()
         options_panel.bind_to_burger(burger)
-        navdrawer.bind(_anim_progress=self._set_side_panel_opacity)
-        navdrawer.bind(_anim_progress=self.disable_chisel)
+
+        def on_anim(instance, value):
+            instance.side_panel.opacity = chisel.disabled = 1 if instance._anim_progress else 0
+        navdrawer.bind(_anim_progress=on_anim)
 
         root.add_widget(navdrawer)
         root.add_widget(burger)
 
         Window.add_widget(self.cursor, canvas="after")
         return root
-
-    def _set_side_panel_opacity(self, instance, value):
-        instance.side_panel.opacity = 1 if instance._anim_progress else 0
-
-    def disable_chisel(self, instance, value):
-        self.chisel.disabled = bool(instance._anim_progress)
 
 
 if __name__ == "__main__":
