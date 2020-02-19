@@ -1,4 +1,4 @@
-# Circumstantial Companions
+# Chisel
 
 ![Chisel Preview](./preview.gif)
 
@@ -51,8 +51,15 @@ assets
 │   │       3.png
 │   │
 │   └───cursor
-│           down.png
-│           up.png
+│           down_0.png
+│           down_1.png
+│           down_2.png
+│           selected_0.png
+│           selected_1.png
+│           selected_2.png
+│           up_0.png
+│           up_1.png
+│           up_2.png
 │
 ├───sounds
 │       001.wav
