@@ -68,9 +68,12 @@ class BurgerButton(ButtonBehavior, Image):
 
 class ToolButton(ToggleButtonBehavior, Image):
     """Toggle buttons for tool selection."""
-    def __init__(self, normal, pressed, *args, **kwargs):
+    def __init__(self, _id, normal, pressed, chisel, cursor):
+        self._id = _id
         self._normal = normal
         self._pressed = pressed
+        self.chisel = chisel
+        self.cursor = cursor
 
         super().__init__(source=normal, size_hint=(.1, .1))
 
@@ -84,3 +87,6 @@ class ToolButton(ToggleButtonBehavior, Image):
     def _on_state(self, *args):
         self.source = self._pressed if self.state == "down" else self._normal
         self.texture.mag_filter = "nearest"
+
+    def on_press(self, *args):
+        self.chisel._tool = self.cursor.tool = self._id

@@ -23,7 +23,7 @@ TOOLS_SELECTED = (str(IMAGE_PATH / "cursor" / f"selected_{i}.png") for i in rang
 class ChiselApp(App):
     def build(self):
         self.icon = ICON
-        self.cursor = Cursor()
+        cursor = Cursor()
         Window.minimum_width, Window.minimum_height = Window.size
         root = FloatLayout()
         navdrawer = NavigationDrawer()
@@ -41,14 +41,12 @@ class ChiselApp(App):
         rel_layout = RelativeLayout()  # This layout allows navdrawer to push contained widgets.
         rel_layout.add_widget(chisel)
 
-        tools = (ToolButton(*sources) for sources in zip(TOOLS_NORMAL, TOOLS_SELECTED))
-        funcs = (lambda touch: (chisel.tool(0), self.cursor.tool(0)),
-                 lambda touch: (chisel.tool(1), self.cursor.tool(1)),
-                 lambda touch: (chisel.tool(2), self.cursor.tool(2)))
-        for i, (tool, func) in enumerate(zip(tools, funcs)):
-            tool.pos_hint = {"x": i * .1 + .35, "y": .01}
-            tool.bind(on_press=func)
-            if not i:  # First tool button is selected.
+        tools = (ToolButton(*args, chisel, cursor)
+                 for args in zip(range(3), TOOLS_NORMAL, TOOLS_SELECTED))
+
+        for tool in tools:
+            tool.pos_hint = {"x": tool._id * .1 + .35, "y": .01}
+            if tool._id == 0:  # First tool button is selected.
                 tool.state = "down"
             rel_layout.add_widget(tool)
 
@@ -63,7 +61,7 @@ class ChiselApp(App):
         root.add_widget(navdrawer)
         root.add_widget(burger)
 
-        Window.add_widget(self.cursor, canvas="after")
+        Window.add_widget(cursor, canvas="after")
         return root
 
 

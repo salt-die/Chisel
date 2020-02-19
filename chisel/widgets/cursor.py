@@ -22,8 +22,8 @@ class CursorImage(Image):
         return self._tool
 
     @tool.setter
-    def tool(self, value):
-        self._tool = value
+    def tool(self, tool):
+        self._tool = tool
         self.on_touch_down(None)
 
     def on_touch_down(self, touch):
