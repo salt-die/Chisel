@@ -64,9 +64,9 @@ class Pebble:
             vx *= -1
 
         self.velocity = vx, vy
-        pixel.update_pos(x + vx, max(0, y + vy))
+        pixel.update_pos(x + vx, y + vy)
 
-        if not pixel.y:
+        if pixel.y < 0:
             self.update.cancel()
             self.chisel.canvas.remove(pixel)
             self.chisel.pebbles.remove(self)  # Remove reference // kill this object
@@ -100,12 +100,13 @@ class Pixel(Rectangle):
 
 class Chisel(Widget):
     """
-    Handles collision detection between pebbles and the hammer.  Creates Pebbles on collision.
+    Handles collision detection between boulder and the hammer.  Creates Pebbles on collision.
     """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._tool = 0  # 0, 1, or 2
+        self.touched = False
         self.sounds = tuple(map(SoundLoader.load, SOUND))
         self.load_boulder()
         self.setup_canvas()
@@ -155,18 +156,19 @@ class Chisel(Widget):
     def tool(self, i):
         self._tool = i
 
-    def poke_power(self, touch, pixel_x, pixel_y):
+    @staticmethod
+    def poke_power(touch, pixel_x, pixel_y):
         """
         Returns the force vector of a poke.
         """
         tx, ty = touch.spos
         dx, dy = pixel_x - tx, pixel_y - ty
+
         distance = max(.001, dx**2 + dy**2)
+        touch_velocity =  touch.dsx**2 + touch.dsy**2
 
-        tdx, tdy = touch.dsx, touch.dsy
-        touch_velocity = tdx**2 + tdy**2
+        power = max(MIN_POWER, CHISEL_POWER * touch_velocity) / distance
 
-        power = max(CHISEL_POWER * touch_velocity, MIN_POWER) / distance
         return power * dx, power * dy
 
     def poke(self, touch):
@@ -178,6 +180,7 @@ class Chisel(Widget):
         image = self.image
         h, w, _ = image.shape
         x, y = int(x * w), int(y * h)  # Image coordinate of pixel in center of poke
+
         # poke bounds; R is poke radius
         l, r = max(0, x - R), min(w, x + R + 1)  # left and right bounds
         t, b = max(0, y - R), min(h, y + R + 1)  # top and bottom bounds
@@ -185,7 +188,7 @@ class Chisel(Widget):
         # Create pebbles around poke and darken area:
         for x, y in product(range(l, r), range(t, b)):
             color = image[y, x, :]
-            if not color[-1] or perceived_brightness(color[:-1]) < 30 * self._tool:
+            if not color[-1] or perceived_brightness(color[:-1]) < 25 * self._tool:
                 continue
 
             px, py = x * IMAGE_SCALE / w + X_OFFSET, y * IMAGE_SCALE / h + Y_OFFSET
@@ -195,7 +198,7 @@ class Chisel(Widget):
             self.pebbles.append(Pebble(pixel, self, velocity))
 
             darker = color[:-1] * .8
-            if perceived_brightness(darker) < 20:
+            if perceived_brightness(darker) < 15:
                 image[y, x, -1] = 0
             else:
                 image[y, x, :-1] = darker
@@ -209,8 +212,14 @@ class Chisel(Widget):
         return True
 
     def on_touch_move(self, touch):
-        self.poke(touch)
+        if not self.touched:
+            self.touched = True
+            self.poke(touch)
+            Clock.schedule_once(self.untouch,1/24) # Limit how quickly dragging mouse chisels stone.
         return True
+
+    def untouch(self, dt):
+        self.touched = False
 
     def reset(self):
         self.load_boulder()
