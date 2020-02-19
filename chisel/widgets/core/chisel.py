@@ -188,7 +188,7 @@ class Chisel(Widget):
         # Create pebbles around poke and darken area:
         for x, y in product(range(l, r), range(t, b)):
             color = image[y, x, :]
-            if not color[-1] or perceived_brightness(color[:-1]) < 25 * self._tool:
+            if not color[-1] or perceived_brightness(color[:-1]) < 20 * self._tool:
                 continue
 
             px, py = x * IMAGE_SCALE / w + X_OFFSET, y * IMAGE_SCALE / h + Y_OFFSET

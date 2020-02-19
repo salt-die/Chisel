@@ -85,8 +85,7 @@ class ToolButton(ToggleButtonBehavior, Image):
         self.bind(state=self._on_state)
 
     def _on_state(self, *args):
+        self.chisel.tool(self._id)
+        self.cursor.tool(self._id)
         self.source = self._pressed if self.state == "down" else self._normal
         self.texture.mag_filter = "nearest"
-
-    def on_press(self, *args):
-        self.chisel._tool = self.cursor.tool = self._id
