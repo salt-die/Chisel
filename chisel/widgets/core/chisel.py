@@ -165,7 +165,7 @@ class Chisel(Widget):
         dx, dy = pixel_x - tx, pixel_y - ty
 
         distance = max(.001, dx**2 + dy**2)
-        touch_velocity =  touch.dsx**2 + touch.dsy**2
+        touch_velocity = touch.dsx**2 + touch.dsy**2
 
         power = max(MIN_POWER, CHISEL_POWER * touch_velocity) / distance
 
