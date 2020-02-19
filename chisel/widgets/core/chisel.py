@@ -222,7 +222,7 @@ class Chisel(Widget):
             self.touched = True
             self.poke(touch)
             # Limit how quickly touch_move chisels away stone.
-            Clock.schedule_once(self.untouch, 1/24)
+            Clock.schedule_once(self.untouch, 1/60)
         return True
 
     def untouch(self, dt):
